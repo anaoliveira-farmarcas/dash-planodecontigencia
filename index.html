@@ -1,0 +1,801 @@
+<script type="module">
+        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE
+        // =========================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // --- ATENÇÃO: SUBSTITUA O TRECHO ABAIXO PELA SUA CONFIGURAÇÃO DO FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
+  authDomain: "dashboardprojetos-a749c.firebaseapp.com",
+  projectId: "dashboardprojetos-a749c",
+  storageBucket: "dashboardprojetos-a749c.firebasestorage.app",
+  messagingSenderId: "208429748638",
+  appId: "1:208429748638:web:9d5ee72514035221b3c68f"
+};
+        // ----------------------------------------------------------------------------
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'dashboard_projetos_v1'); // Nome da "tabela" no banco
+
+        // --- VARIÁVEIS GLOBAIS ---
+        
+        const projectList = [
+            "MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", 
+            "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", 
+            "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", 
+            "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", 
+            "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"
+        ];
+        
+        const statusList = [
+            { value: 'pendente', text: 'Pendente', class: 'status-pendente' },
+            { value: 'andamento', text: 'Em Andamento', class: 'status-andamento' },
+            { value: 'pendente-associa', text: 'Pendente Associado', class: 'status-pendente-associa' },
+            { value: 'finalizado', text: 'Finalizado', class: 'status-finalizado' }
+        ];
+        
+        const indicatorMonths = [
+            { id: 'aug2025', label: 'Ago/2025' }, { id: 'sep2025', label: 'Set/2025' },
+            { id: 'oct2025', label: 'Out/2025' }, { id: 'nov2025', label: 'Nov/2025' },
+            { id: 'dec2025', label: 'Dez/2025' }, { id: 'jan2026', label: 'Jan/2026' },
+            { id: 'feb2026', label: 'Fev/2026' }, { id: 'mar2026', label: 'Mar/2026' },
+            { id: 'apr2026', label: 'Abr/2026' }, { id: 'may2026', label: 'Mai/2026' },
+            { id: 'jun2026', label: 'Jun/2026' }, { id: 'jul2026', label: 'Jul/2026' },
+            { id: 'aug2026', label: 'Ago/2026' }, { id: 'sep2026', label: 'Set/2026' },
+            { id: 'oct2026', label: 'Out/2026' }, { id: 'nov2026', label: 'Nov/2026' },
+            { id: 'dec2026', label: 'Dez/2026' }
+        ];
+        const chartLabels = [
+            'Ago/25', 'Set/25', 'Out/25', 'Nov/25', 'Dez/25', 
+            'Jan/26', 'Fev/26', 'Mar/26', 'Abr/26', 'Mai/26', 'Jun/26', 'Jul/26', 
+            'Ago/26', 'Set/26', 'Out/26', 'Nov/26', 'Dez/26'
+        ];
+
+        // Dados em memória (serão sincronizados com o Firebase)
+        let allStoresData = []; 
+        let allFlattenedData = [];
+        
+        // Gráficos
+        let currentChartInstance = null; 
+        let consolidatedChartInstance = null; 
+        let currentChartRowData = null; 
+
+        // --- ELEMENTOS DO DOM ---
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const storeModal = document.getElementById('store-modal');
+        const storeForm = document.getElementById('store-form');
+        const projectSelect = document.getElementById('nome-projeto');
+        const toast = document.getElementById('toast');
+        const projectTableBody = document.getElementById('project-table-body');
+        
+        // (filtros)
+        const searchInput = document.getElementById('search-input');
+        const sidebar = document.getElementById('filter-sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleFilterBtn = document.getElementById('toggle-filter-btn');
+        const applyFiltersBtn = document.getElementById('apply-filters-btn');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
+        const filterAnalista = document.getElementById('filter-analista');
+        const filterGe = document.getElementById('filter-ge');
+        const filterAssociado = document.getElementById('filter-associado');
+        const filterUf = document.getElementById('filter-uf');
+        const filterAnjo = document.getElementById('filter-anjo');
+        const filterBandeira = document.getElementById('filter-bandeira');
+        const filterProjeto = document.getElementById('filter-projeto'); 
+        const filterCnpj = document.getElementById('filter-cnpj');
+        const filterLoja = document.getElementById('filter-loja');
+
+        // (KPIs)
+        const kpiTotalLojas = document.getElementById('kpi-total-lojas'); 
+        const kpiProjetosPendentes = document.getElementById('kpi-projetos-pendentes');
+        const kpiProjetosPendentesAssocia = document.getElementById('kpi-projetos-pendentes-associa');
+        const kpiProjetosFinalizados = document.getElementById('kpi-projetos-finalizados');
+        const kpiEmAndamento = document.getElementById('kpi-em-andamento');
+        
+        // (Modais e Gráficos)
+        const chartModal = document.getElementById('chart-modal');
+        const closeChartModalBtn = document.getElementById('close-chart-modal-btn');
+        const chartModalTitle = document.getElementById('chart-modal-title');
+        const chartCanvas = document.getElementById('indicator-chart').getContext('2d');
+
+        const consolidatedChartCanvas = document.getElementById('consolidated-chart').getContext('2d');
+        const chartFilterProject = document.getElementById('chart-filter-project');
+        const chartFilterGe = document.getElementById('chart-filter-ge');
+        const chartFilterCnpjLoja = document.getElementById('chart-filter-cnpj-loja');
+        const generateChartBtn = document.getElementById('generate-chart-btn');
+
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelModalBtn = document.getElementById('cancel-modal-btn');
+        
+        const obsModal = document.getElementById('obs-modal');
+        const obsModalTitle = document.getElementById('obs-modal-title');
+        const obsModalTextarea = document.getElementById('obs-modal-textarea');
+        const closeObsModalBtn = document.getElementById('close-obs-modal-btn');
+        const cancelObsBtn = document.getElementById('cancel-obs-btn');
+        const saveObsBtn = document.getElementById('save-obs-btn');
+
+        
+        // --- FUNÇÕES DE SINCRONIZAÇÃO (FIREBASE) ---
+
+        /**
+         * Salva todos os dados no Firebase.
+         * Isso substitui o localStorage.setItem
+         */
+        function salvarDadosNoFirebase(stores) {
+            set(dbRef, stores)
+                .then(() => {
+                    console.log("Dados salvos no Firebase com sucesso!");
+                })
+                .catch((error) => {
+                    console.error("Erro ao salvar no Firebase:", error);
+                    showToast("Erro de conexão ao salvar!", true);
+                });
+        }
+
+        /**
+         * Escuta as mudanças no Firebase em tempo real.
+         * Assim que alguém edita, todos recebem a atualização.
+         */
+        function iniciarSincronizacao() {
+            showToast("Conectando ao banco de dados...");
+            onValue(dbRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    allStoresData = data; // Atualiza a variável global
+                } else {
+                    allStoresData = []; // Banco vazio
+                }
+                processarDadosParaTabela(); // Atualiza a tela
+            });
+        }
+
+        // --- PROCESSAMENTO DE DADOS ---
+
+        function processarDadosParaTabela() {
+            // Converte a estrutura hierárquica (Loja -> Projetos) em linhas da tabela (Linha = Loja+Projeto)
+            allFlattenedData = []; 
+            const filterOptions = { 
+                analistas: new Set(), ges: new Set(), associados: new Set(), 
+                anjos: new Set(), ufs: new Set(), bandeiras: new Set() 
+            };
+            
+            // Verifica se allStoresData é um array ou objeto (Firebase pode retornar objeto se chaves forem índices)
+            const storesArray = Array.isArray(allStoresData) ? allStoresData : Object.values(allStoresData);
+
+            storesArray.forEach((store) => {
+                if(!store) return; // Ignora nulos
+                filterOptions.analistas.add(store.analista);
+                filterOptions.ges.add(store.ge);
+                filterOptions.associados.add(store.associado);
+                filterOptions.anjos.add(store.anjo); 
+                filterOptions.ufs.add(store.uf); 
+                filterOptions.bandeiras.add(store.bandeira); 
+                
+                if (store.projects) {
+                    Object.keys(store.projects).forEach(projectName => {
+                        const project = store.projects[projectName];
+                        const row = {
+                            ...store, 
+                            projectName: projectName,
+                            status: project.status,
+                            goal: project.goal || '',
+                            observation: project.observation || '',
+                            ...project.indicators 
+                        };
+                        // Remove a propriedade projects do objeto row para não duplicar
+                        const { projects, ...cleanRow } = row; 
+                        allFlattenedData.push(cleanRow);
+                    });
+                }
+            });
+            
+            allFlattenedData.sort((a, b) => a.nomeLoja.localeCompare(b.nomeLoja));
+
+            recalculateKPIs(); 
+            populateFilterSelects(filterOptions); 
+            // Carrega filtros locais (preferência do usuário não vai pro banco)
+            loadSavedFilters(); 
+            applyAllFilters();
+        }
+
+        // --- MANIPULADORES DE DADOS (Alteram a variável global e enviam pro Firebase) ---
+
+        // Função genérica para encontrar e atualizar uma loja
+        function atualizarStoreNoBanco(storeId, callbackModificacao) {
+            // Fazemos uma cópia profunda para evitar mutação direta antes do envio
+            let stores = JSON.parse(JSON.stringify(allStoresData));
+            
+            // Garante que é array
+            if (!Array.isArray(stores)) stores = Object.values(stores);
+
+            const storeIndex = stores.findIndex(s => s && s.id === storeId);
+            
+            if (callbackModificacao(stores, storeIndex)) {
+                salvarDadosNoFirebase(stores);
+            }
+        }
+
+        // --- FUNÇÕES DE SUPORTE (UI) ---
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function populateProjectSelect() { 
+            projectSelect.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
+            projectList.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                projectSelect.appendChild(option);
+            });
+        }
+
+        function populateFilterProjectSelects() {
+            filterProjeto.innerHTML = '<option value="">Todos os projetos</option>';
+            projectList.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                filterProjeto.appendChild(option);
+            });
+
+            chartFilterProject.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
+            projectList.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                chartFilterProject.appendChild(option.cloneNode(true));
+            });
+        }
+
+        function showModal(modalElement) { modalElement.classList.remove('hidden'); }
+        function hideModal(modalElement) { modalElement.classList.add('hidden'); }
+        function showToast(message, isError = false) { 
+            toast.textContent = message;
+            toast.classList.remove('bg-green-600', 'bg-red-600', 'translate-x-full', 'opacity-0');
+            toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600', 'translate-x-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+        function updateStatusColor(selectElement) { 
+            statusList.forEach(s => selectElement.classList.remove(s.class));
+            selectElement.classList.remove('status-default');
+            const selectedStatus = statusList.find(s => s.value === selectElement.value);
+            if (selectedStatus) selectElement.classList.add(selectedStatus.class);
+            else selectElement.classList.add('status-default');
+        }
+        function toggleSidebar() { 
+            sidebar.classList.toggle('-translate-x-full');
+            mainContent.classList.toggle('md:ml-72');
+        }
+        
+        // --- FILTROS (Mantidos no LocalStorage pois são preferência local) ---
+        function saveFilters() {
+            const filters = {
+                analista: filterAnalista.value, ge: filterGe.value, associado: filterAssociado.value,
+                uf: filterUf.value, anjo: filterAnjo.value, bandeira: filterBandeira.value, 
+                projeto: filterProjeto.value, cnpj: filterCnpj.value, loja: filterLoja.value,
+                search: searchInput.value
+            };
+            localStorage.setItem('projectDashboardFilters', JSON.stringify(filters));
+        }
+        function loadSavedFilters() {
+            const savedFilters = JSON.parse(localStorage.getItem('projectDashboardFilters'));
+            if (savedFilters) {
+                filterAnalista.value = savedFilters.analista || '';
+                filterGe.value = savedFilters.ge || '';
+                filterAssociado.value = savedFilters.associado || '';
+                filterUf.value = savedFilters.uf || ''; 
+                filterAnjo.value = savedFilters.anjo || ''; 
+                filterBandeira.value = savedFilters.bandeira || '';
+                filterProjeto.value = savedFilters.projeto || '';
+                filterCnpj.value = savedFilters.cnpj || '';
+                filterLoja.value = savedFilters.loja || '';
+                searchInput.value = savedFilters.search || '';
+            }
+        }
+        function clearSavedFilters() {
+            localStorage.removeItem('projectDashboardFilters');
+            filterAnalista.value = ''; filterGe.value = ''; filterAssociado.value = '';
+            filterUf.value = ''; filterAnjo.value = ''; filterBandeira.value = '';
+            filterProjeto.value = ''; filterCnpj.value = ''; filterLoja.value = '';
+            searchInput.value = '';
+            applyAllFilters();
+        }
+        function applyAllFilters() {
+            const search = searchInput.value.toLowerCase();
+            const analista = filterAnalista.value;
+            const ge = filterGe.value;
+            const associado = filterAssociado.value;
+            const uf = filterUf.value; 
+            const anjo = filterAnjo.value; 
+            const bandeira = filterBandeira.value;
+            const projeto = filterProjeto.value;
+            const cnpj = filterCnpj.value.toLowerCase();
+            const loja = filterLoja.value.toLowerCase();
+
+            const filteredData = allFlattenedData.filter(row => {
+                const searchMatch = search === '' || row.nomeLoja.toLowerCase().includes(search) || row.id.toLowerCase().includes(search);
+                const analistaMatch = analista === '' || row.analista === analista;
+                const geMatch = ge === '' || row.ge === ge;
+                const associadoMatch = associado === '' || row.associado === associado;
+                const ufMatch = uf === '' || row.uf === uf; 
+                const anjoMatch = anjo === '' || row.anjo === anjo; 
+                const bandeiraMatch = bandeira === '' || row.bandeira === bandeira;
+                const projetoMatch = projeto === '' || row.projectName === projeto;
+                const cnpjMatch = cnpj === '' || row.id.toLowerCase().includes(cnpj);
+                const lojaMatch = loja === '' || row.nomeLoja.toLowerCase().includes(loja);
+
+                return searchMatch && analistaMatch && geMatch && associadoMatch && ufMatch && anjoMatch && bandeiraMatch && projetoMatch && cnpjMatch && lojaMatch;
+            });
+
+            renderTable(filteredData);
+        }
+        
+        // --- RENDERIZAÇÃO ---
+        function renderTable(dataToRender) {
+            projectTableBody.innerHTML = '';
+            if (dataToRender.length === 0) {
+                 projectTableBody.innerHTML = `<tr><td colspan="29" class="text-center p-8 text-gray-500">Nenhum projeto encontrado.</td></tr>`;
+                return;
+            }
+            
+            dataToRender.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+
+                const statusOptions = statusList.map(s => 
+                    `<option value="${s.value}" ${s.value === row.status ? 'selected' : ''}>${s.text}</option>`
+                ).join('');
+                const statusSelectClass = statusList.find(s => s.value === row.status)?.class || 'status-default';
+
+                const indicatorInputs = indicatorMonths.map(month => `
+                    <td class="px-4 py-2 text-center">
+                        <input type="number" class="indicator-input-table" value="${row[month.id] || ''}" placeholder="-"
+                               data-store-id="${row.id}" data-project-name="${row.projectName}" data-month="${month.id}">
+                    </td>
+                `).join('');
+
+                const obsBtnClass = (row.observation && row.observation.trim() !== '') ? 'text-blue-500 hover:text-blue-700 obs-filled' : 'text-gray-400 hover:text-gray-600';
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">${row.nomeLoja}</td>
+                    <td class="px-4 py-3 text-gray-600">${row.id}</td>
+                    <td class="px-4 py-3 text-gray-600">${row.analista}</td>
+                    <td class="px-4 py-3 text-gray-600">${row.ge}</td>
+                    <td class="px-4 py-3 text-gray-600">${row.associado}</td>
+                    <td class="px-4 py-3 text-gray-600">${row.bandeira}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">${row.projectName}</td>
+                    <td class="px-4 py-3 text-center">
+                        <select class="status-select ${statusSelectClass}" data-store-id="${row.id}" data-project-name="${row.projectName}">
+                            ${statusOptions}
+                        </select>
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        <input type="number" class="indicator-input-table meta-input" value="${row.goal || ''}" placeholder="-"
+                               data-store-id="${row.id}" data-project-name="${row.projectName}" data-field="goal">
+                    </td>
+                    ${indicatorInputs}
+                    <td class="px-4 py-3 text-center">
+                        <button class="view-obs-btn ${obsBtnClass}" title="Ver/Editar Observação" data-store-id="${row.id}" data-project-name="${row.projectName}">
+                            <i class="fa-solid fa-note-sticky fa-lg"></i>
+                        </button>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center gap-x-3 min-w-[120px]">
+                            <button class="edit-store-btn text-blue-500 hover:text-blue-700" title="Editar Loja" data-store-id="${row.id}"><i class="fa-solid fa-pencil fa-lg"></i></button>
+                            <button class="view-chart-btn text-[#FF5510] hover:text-orange-700" title="Ver Gráfico" data-store-id="${row.id}" data-project-name="${row.projectName}"><i class="fa-solid fa-chart-line fa-lg"></i></button>
+                            <button class="delete-project-btn text-red-500 hover:text-red-700" title="Excluir Projeto" data-store-id="${row.id}" data-project-name="${row.projectName}"><i class="fa-solid fa-trash fa-lg"></i></button>
+                        </div>
+                    </td>
+                `; 
+                projectTableBody.appendChild(tr); 
+            });
+            
+            // Listeners
+            projectTableBody.querySelectorAll('.status-select').forEach(el => el.addEventListener('change', handleStatusChange));
+            projectTableBody.querySelectorAll('.indicator-input-table:not(.meta-input)').forEach(el => el.addEventListener('blur', handleIndicatorChange));
+            projectTableBody.querySelectorAll('.meta-input').forEach(el => el.addEventListener('blur', handleProjectFieldChange));
+            projectTableBody.querySelectorAll('.view-chart-btn').forEach(el => el.addEventListener('click', handleViewChart));
+            projectTableBody.querySelectorAll('.delete-project-btn').forEach(el => el.addEventListener('click', handleDeleteProject));
+            projectTableBody.querySelectorAll('.edit-store-btn').forEach(el => el.addEventListener('click', handleEditStoreClick));
+            projectTableBody.querySelectorAll('.view-obs-btn').forEach(el => el.addEventListener('click', handleViewObservation));
+        }
+        
+        function updateKpiCards(kpi) { 
+            kpiTotalLojas.textContent = kpi.totalLojas; 
+            kpiProjetosPendentes.textContent = kpi.totalPendentes;
+            kpiProjetosPendentesAssocia.textContent = kpi.totalPendentesAssocia; 
+            kpiProjetosFinalizados.textContent = kpi.totalFinalizados;
+            kpiEmAndamento.textContent = kpi.totalEmAndamento;
+        }
+        
+        function recalculateKPIs() {
+            const kpi = { totalLojas: 0, totalEmAndamento: 0, totalFinalizados: 0, totalPendentes: 0, totalPendentesAssocia: 0 };
+            const uniqueLojas = new Set(); 
+            allFlattenedData.forEach(row => {
+                uniqueLojas.add(row.id);
+                if(row.status === 'finalizado') kpi.totalFinalizados++;
+                if(row.status === 'pendente') kpi.totalPendentes++;
+                if(row.status === 'pendente-associa') kpi.totalPendentesAssocia++;
+                if(row.status === 'andamento') kpi.totalEmAndamento++;
+            });
+            kpi.totalLojas = uniqueLojas.size;
+            updateKpiCards(kpi);
+        }
+
+        function populateFilterSelects(options) { 
+            const createOptions = (selectElement, optionsSet) => {
+                const currentValue = selectElement.value;
+                selectElement.innerHTML = '<option value="">Todos</option>';
+                [...optionsSet].sort().forEach(opt => {
+                    if (opt) {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        selectElement.appendChild(option);
+                    }
+                });
+                selectElement.value = currentValue;
+            };
+            createOptions(filterAnalista, options.analistas); createOptions(filterGe, options.ges);
+            createOptions(filterAssociado, options.associados); createOptions(filterUf, options.ufs); 
+            createOptions(filterAnjo, options.anjos); createOptions(filterBandeira, options.bandeiras); 
+            createOptions(chartFilterGe, options.ges);
+        }
+        
+        // --- GRÁFICOS ---
+        const customDatalabelsPlugin = {
+            id: 'customDatalabels',
+            afterDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.font = '800 10px Rubik, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    ctx.fillStyle = dataset.borderColor || '#333';
+                    if (!meta.hidden) {
+                        meta.data.forEach((element, index) => {
+                            const value = dataset.data[index];
+                            if (value) {
+                                const { x, y } = element.getProps(['x', 'y']);
+                                ctx.fillText(value.toLocaleString('pt-BR'), x, y - 5);
+                            }
+                        });
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        function renderChart(rowData, format = 'number') { 
+            if (!rowData) return;
+            const data = indicatorMonths.map(month => Number(rowData[month.id]) || 0);
+            const goal = Number(rowData.goal) || 0;
+            chartModalTitle.textContent = `Evolução: ${rowData.nomeLoja} - ${rowData.projectName}`;
+            
+            if (currentChartInstance) currentChartInstance.destroy();
+
+            currentChartInstance = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{ label: 'Indicador', data: data, borderColor: '#FF5510', backgroundColor: 'rgba(255, 85, 16, 0.1)', fill: true, tension: 0.1 }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (val) => format === 'currency' ? 'R$ '+val : (format === 'percent' ? val+'%' : val) }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                goalLine: {
+                                    type: 'line', yMin: goal, yMax: goal, borderColor: 'rgb(255, 99, 132)', borderWidth: 2, borderDash: [6, 6],
+                                    label: { content: 'Meta: ' + goal, enabled: true, position: 'start', backgroundColor: 'rgba(255, 99, 132, 0.8)' }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderConsolidatedChart() {
+            const selectedProject = chartFilterProject.value;
+            const selectedGe = chartFilterGe.value;
+            const filterCnpjLojaVal = chartFilterCnpjLoja.value.toLowerCase();
+            if (!selectedProject) { showToast("Selecione um projeto.", true); return; }
+            
+            const filteredData = allFlattenedData.filter(row => {
+                return row.projectName === selectedProject &&
+                       (selectedGe === '' || row.ge === selectedGe) &&
+                       (filterCnpjLojaVal === '' || row.id.toLowerCase().includes(filterCnpjLojaVal) || row.nomeLoja.toLowerCase().includes(filterCnpjLojaVal));
+            });
+
+            if (filteredData.length === 0) {
+                showToast("Nenhuma loja encontrada.", true);
+                if (consolidatedChartInstance) { consolidatedChartInstance.destroy(); consolidatedChartInstance = null; }
+                return;
+            }
+
+            const datasets = filteredData.map(row => ({
+                label: `${row.nomeLoja}`,
+                data: indicatorMonths.map(month => Number(row[month.id]) || 0),
+                borderColor: getRandomColor(),
+                backgroundColor: 'transparent',
+                tension: 0.1, fill: false
+            }));
+
+            if (consolidatedChartInstance) consolidatedChartInstance.destroy();
+
+            consolidatedChartInstance = new Chart(consolidatedChartCanvas, {
+                type: 'line',
+                data: { labels: chartLabels, datasets: datasets },
+                plugins: [customDatalabelsPlugin],
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 20 } }, title: { display: true, text: `Evolução: ${selectedProject}` } },
+                    scales: { y: { beginAtZero: true } }, interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        // --- HANDLERS (CRUD) ---
+
+        function handleViewChart(e) { 
+            const { storeId, projectName } = e.currentTarget.closest('button').dataset;
+            currentChartRowData = allFlattenedData.find(r => r.id === storeId && r.projectName === projectName);
+            if(currentChartRowData) {
+                document.querySelector('input[name="chart-format"][value="number"]').checked = true;
+                renderChart(currentChartRowData, 'number');
+                showModal(chartModal);
+            }
+        }
+        
+        function handleDeleteProject(e) { 
+            const { storeId, projectName } = e.currentTarget.closest('button').dataset;
+            const rowData = allFlattenedData.find(r => r.id === storeId && r.projectName === projectName);
+            if (!rowData) return;
+            document.getElementById('delete-modal-text').textContent = `Excluir "${projectName}" da loja "${rowData.nomeLoja}"?`;
+            confirmDeleteBtn.dataset.storeId = storeId;
+            confirmDeleteBtn.dataset.projectName = projectName;
+            showModal(deleteConfirmModal);
+        }
+        
+        function confirmProjectDelete() { 
+            const { storeId, projectName } = confirmDeleteBtn.dataset;
+            confirmDeleteBtn.disabled = true;
+
+            atualizarStoreNoBanco(storeId, (stores, idx) => {
+                if (idx > -1 && stores[idx].projects && stores[idx].projects[projectName]) {
+                    delete stores[idx].projects[projectName];
+                    showToast("Projeto excluído!");
+                    hideModal(deleteConfirmModal);
+                    confirmDeleteBtn.disabled = false;
+                    return true; // Salvar
+                }
+                return false;
+            });
+        }
+
+        function handleViewObservation(e) { 
+            const { storeId, projectName } = e.currentTarget.closest('button').dataset;
+            const rowData = allFlattenedData.find(r => r.id === storeId && r.projectName === projectName);
+            if (!rowData) return;
+            obsModalTitle.textContent = `Obs: ${rowData.nomeLoja} - ${projectName}`;
+            obsModalTextarea.value = rowData.observation || '';
+            saveObsBtn.dataset.storeId = storeId;
+            saveObsBtn.dataset.projectName = projectName;
+            showModal(obsModal);
+        }
+        
+        function handleSaveObservation() {
+            const { storeId, projectName } = saveObsBtn.dataset;
+            const newObservation = obsModalTextarea.value;
+            saveObsBtn.disabled = true;
+
+            atualizarStoreNoBanco(storeId, (stores, idx) => {
+                if (idx > -1 && stores[idx].projects && stores[idx].projects[projectName]) {
+                    stores[idx].projects[projectName].observation = newObservation;
+                    showToast("Observação salva!");
+                    hideModal(obsModal);
+                    saveObsBtn.disabled = false;
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const saveButton = document.getElementById('save-store-btn');
+            saveButton.disabled = true;
+            const formData = new FormData(storeForm);
+            const storeId = formData.get('cnpj');
+            const isEditMode = document.getElementById('cnpj').readOnly;
+
+            const storeData = {
+                analista: formData.get('analista'), anjo: formData.get('anjo'),
+                uf: formData.get('uf'), bandeira: formData.get('bandeira'),
+                ge: formData.get('ge'), associado: formData.get('associado'),
+                nomeLoja: formData.get('nome-loja'),
+            };
+
+            // Copia dados atuais
+            let stores = JSON.parse(JSON.stringify(allStoresData));
+            if(!Array.isArray(stores)) stores = Object.values(stores);
+            
+            const storeIndex = stores.findIndex(s => s.id === storeId);
+
+            if (isEditMode) {
+                if (storeIndex > -1) {
+                    stores[storeIndex] = { ...stores[storeIndex], ...storeData };
+                    salvarDadosNoFirebase(stores);
+                    showToast("Loja atualizada!");
+                    hideModal(storeModal);
+                }
+            } else {
+                const projectName = formData.get('nome-projeto');
+                const meta = formData.get('meta');
+                const observation = formData.get('observation');
+                
+                if (!storeId || !projectName) {
+                    showToast("CNPJ e Projeto obrigatórios!", true);
+                    saveButton.disabled = false; return;
+                }
+
+                const indicators = {};
+                indicatorMonths.forEach(m => indicators[m.id] = '');
+                
+                const newProjectData = {
+                    status: 'pendente', indicators: indicators,
+                    goal: meta || '', observation: observation || ''
+                };
+                
+                if (storeIndex > -1) {
+                    stores[storeIndex] = { ...stores[storeIndex], ...storeData };
+                    if (!stores[storeIndex].projects) stores[storeIndex].projects = {};
+                    stores[storeIndex].projects[projectName] = newProjectData;
+                    showToast("Projeto adicionado!");
+                } else {
+                    const novaLoja = { ...storeData, id: storeId, projects: { [projectName]: newProjectData } };
+                    stores.push(novaLoja);
+                    showToast("Loja criada!");
+                }
+                salvarDadosNoFirebase(stores);
+                hideModal(storeModal);
+                storeForm.reset();
+            }
+            saveButton.disabled = false;
+        }
+        
+        function handleStatusChange(e) { 
+            const { storeId, projectName } = e.target.dataset;
+            const newStatus = e.target.value;
+            updateStatusColor(e.target);
+            
+            atualizarStoreNoBanco(storeId, (stores, idx) => {
+                if (idx > -1 && stores[idx].projects[projectName]) {
+                    stores[idx].projects[projectName].status = newStatus;
+                    return true;
+                }
+                return false;
+            });
+        }
+        
+        function handleIndicatorChange(e) { 
+            const { storeId, projectName, month } = e.target.dataset;
+            const newValue = e.target.value;
+            
+            atualizarStoreNoBanco(storeId, (stores, idx) => {
+                if (idx > -1 && stores[idx].projects[projectName]) {
+                    if (!stores[idx].projects[projectName].indicators) stores[idx].projects[projectName].indicators = {};
+                    stores[idx].projects[projectName].indicators[month] = newValue;
+                    e.target.classList.add('bg-green-100');
+                    setTimeout(() => e.target.classList.remove('bg-green-100'), 1000);
+                    return true;
+                }
+                return false;
+            });
+        }
+        
+        function handleProjectFieldChange(e) { 
+            const { storeId, projectName, field } = e.target.dataset;
+            const newValue = e.target.value;
+            
+            atualizarStoreNoBanco(storeId, (stores, idx) => {
+                if (idx > -1 && stores[idx].projects[projectName]) {
+                    stores[idx].projects[projectName][field] = newValue;
+                    e.target.classList.add('bg-green-100');
+                    setTimeout(() => e.target.classList.remove('bg-green-100'), 1000);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function resetModalToCreateMode() {
+            storeForm.reset();
+            document.getElementById('cnpj').readOnly = false;
+            document.getElementById('store-modal-title').textContent = "Adicionar Nova Loja";
+            document.getElementById('save-store-btn').textContent = "Salvar";
+            document.getElementById('form-project-group').style.display = 'block';
+            document.getElementById('form-meta-group').style.display = 'block';
+            document.getElementById('form-observation-group').style.display = 'block';
+            document.getElementById('nome-projeto').required = true;
+        }
+
+        function handleEditStoreClick(e) {
+            const storeId = e.currentTarget.closest('button').dataset.storeId;
+            const rowData = allFlattenedData.find(r => r.id === storeId);
+            if (!rowData) return;
+            
+            document.getElementById('analista').value = rowData.analista || '';
+            document.getElementById('anjo').value = rowData.anjo || '';
+            document.getElementById('uf').value = rowData.uf || '';
+            document.getElementById('bandeira').value = rowData.bandeira || '';
+            document.getElementById('cnpj').value = rowData.id;
+            document.getElementById('ge').value = rowData.ge || '';
+            document.getElementById('associado').value = rowData.associado || '';
+            document.getElementById('nome-loja').value = rowData.nomeLoja || '';
+            
+            document.getElementById('cnpj').readOnly = true;
+            document.getElementById('store-modal-title').textContent = "Editar Dados da Loja";
+            document.getElementById('save-store-btn').textContent = "Atualizar Loja";
+            document.getElementById('form-project-group').style.display = 'none';
+            document.getElementById('form-meta-group').style.display = 'none';
+            document.getElementById('form-observation-group').style.display = 'none';
+            document.getElementById('nome-projeto').required = false;
+            showModal(storeModal);
+        }
+
+        // --- INICIALIZAÇÃO ---
+        openModalBtn.addEventListener('click', () => { resetModalToCreateMode(); showModal(storeModal); });
+        closeModalBtn.addEventListener('click', () => hideModal(storeModal));
+        cancelModalBtn.addEventListener('click', () => hideModal(storeModal));
+        closeChartModalBtn.addEventListener('click', () => hideModal(chartModal));
+        cancelDeleteBtn.addEventListener('click', () => hideModal(deleteConfirmModal));
+        confirmDeleteBtn.addEventListener('click', confirmProjectDelete);
+        closeObsModalBtn.addEventListener('click', () => hideModal(obsModal));
+        cancelObsBtn.addEventListener('click', () => hideModal(obsModal));
+        saveObsBtn.addEventListener('click', handleSaveObservation);
+        document.querySelectorAll('input[name="chart-format"]').forEach(radio => {
+            radio.addEventListener('change', (e) => { if (currentChartRowData) renderChart(currentChartRowData, e.target.value); });
+        });
+        toggleFilterBtn.addEventListener('click', toggleSidebar);
+        applyFiltersBtn.addEventListener('click', () => { saveFilters(); applyAllFilters(); });
+        clearFiltersBtn.addEventListener('click', clearSavedFilters);
+        searchInput.addEventListener('input', () => { saveFilters(); applyAllFilters(); });
+        generateChartBtn.addEventListener('click', renderConsolidatedChart);
+        storeForm.addEventListener('submit', handleFormSubmit);
+
+        populateProjectSelect();
+        populateFilterProjectSelects();
+        
+        // Inicia Sincronização com Firebase
+        iniciarSincronizacao();
+
+    </script>
