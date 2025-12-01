@@ -1,29 +1,26 @@
 <script type="module">
-        // Importa o Firebase direto do link (necessário para navegadores)
+        // 1. IMPORTAÇÃO CORRETA (Links completos para funcionar no navegador)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // =========================================================
-        // SUAS CHAVES CONFIGURADAS CORRETAMENTE
-        // =========================================================
+        // 2. SUA CONFIGURAÇÃO COMPLETA (Adicionei a linha databaseURL que faltava)
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
-            // Adicionei esta linha que faltava, baseada no seu Project ID:
-            databaseURL: "https://dashboardprojetos-a749c-default-rtdb.firebaseio.com", 
+            // 👇 ESTA LINHA É OBRIGATÓRIA PARA O SITE FUNCIONAR 👇
+            databaseURL: "https://dashboardprojetos-a749c-default-rtdb.firebaseio.com",
             projectId: "dashboardprojetos-a749c",
             storageBucket: "dashboardprojetos-a749c.firebasestorage.app",
             messagingSenderId: "208429748638",
             appId: "1:208429748638:web:9d5ee72514035221b3c68f"
         };
-        // =========================================================
 
-        // Inicializa o App e o Banco de Dados
+        // Inicializa o App
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const dbRef = ref(db, 'dashboard_projetos_v1');
 
-        // --- VARIÁVEIS GLOBAIS ---
+        // --- VARIÁVEIS DO SISTEMA ---
         let allStoresData = []; 
         let allFlattenedData = [];
         let currentChartInstance = null; 
@@ -42,7 +39,7 @@
         ];
         const chartLabels = indicatorMonths.map(m => m.label);
 
-        // UI Elements
+        // Elementos da Tela
         const els = {
             tableBody: document.getElementById('project-table-body'),
             toast: document.getElementById('toast'),
@@ -74,17 +71,15 @@
             }
         };
 
-        // --- CORE: REALTIME SYNC ---
-        // Aqui ele tenta conectar. Se o banco não tiver sido criado no modo teste, não vai carregar.
+        // --- CONEXÃO COM O BANCO ---
         onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
             processData();
-            // Feedback visual apenas se houver dados ou se a conexão for bem sucedida (array vazio)
-            showToast("Conectado ao banco!", false, 2000); 
+            showToast("Conectado!", false, 1500);
         }, (error) => {
-            console.error(error);
-            showToast("Erro: Verifique as regras do Firebase!", true, 5000);
+            console.error("Erro Firebase:", error);
+            showToast("Erro de Conexão. Banco criado?", true, 5000);
         });
 
         function saveToFirebase(newData) {
@@ -94,7 +89,7 @@
             });
         }
 
-        // --- LÓGICA DO DASHBOARD ---
+        // --- LÓGICA DO SISTEMA ---
         function processData() {
             allFlattenedData = [];
             const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), anjos: new Set(), ufs: new Set(), bandeiras: new Set() };
@@ -131,7 +126,6 @@
             fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs);
             fill(els.filters.anjo, sets.anjos); fill(els.filters.bandeira, sets.bandeiras);
             
-            // Chart GE Filter
             const chartGe = document.getElementById('chart-filter-ge');
             const curGe = chartGe.value;
             chartGe.innerHTML = '<option value="">Todos</option>';
@@ -196,7 +190,6 @@
                 els.tableBody.appendChild(tr);
             });
 
-            // Bind Events
             els.tableBody.querySelectorAll('select').forEach(el => el.addEventListener('change', updateStatus));
             els.tableBody.querySelectorAll('.indicator-input-table:not(.meta-input)').forEach(el => el.addEventListener('change', updateIndicator)); 
             els.tableBody.querySelectorAll('.meta-input').forEach(el => el.addEventListener('change', updateMeta));
@@ -206,7 +199,6 @@
             els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
         }
 
-        // --- UPDATERS ---
         function updateGeneric(id, pName, fn) {
             const clone = JSON.parse(JSON.stringify(allStoresData));
             const idx = clone.findIndex(s => s && s.id === id);
@@ -226,201 +218,3 @@
             const el = e.target;
             updateGeneric(el.dataset.id, el.dataset.p, (proj) => {
                 if(!proj.indicators) proj.indicators = {};
-                proj.indicators[el.dataset.m] = el.value;
-            });
-            flash(el);
-        }
-
-        function updateMeta(e) {
-            const el = e.target;
-            updateGeneric(el.dataset.id, el.dataset.p, (proj) => proj.goal = el.value);
-            flash(el);
-        }
-
-        function flash(el) {
-            el.classList.add('bg-green-100', 'border-green-500');
-            setTimeout(() => el.classList.remove('bg-green-100', 'border-green-500'), 1000);
-        }
-
-        // --- MODAL ACTIONS ---
-        els.storeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            document.getElementById('save-store-btn').disabled = true;
-            const data = new FormData(els.storeForm);
-            const id = data.get('cnpj');
-            const clone = JSON.parse(JSON.stringify(allStoresData));
-            let idx = clone.findIndex(s => s && s.id === id);
-            
-            const common = {
-                analista: data.get('analista'), anjo: data.get('anjo'), uf: data.get('uf'),
-                bandeira: data.get('bandeira'), ge: data.get('ge'), associado: data.get('associado'),
-                nomeLoja: data.get('nome-loja')
-            };
-
-            if(document.getElementById('cnpj').readOnly) { // Edit Mode
-                 if(idx > -1) clone[idx] = { ...clone[idx], ...common };
-            } else { // Create Mode
-                const pName = data.get('nome-projeto');
-                if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); document.getElementById('save-store-btn').disabled=false; return; }
-                const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
-                indicatorMonths.forEach(m => newProj.indicators[m.id] = '');
-                
-                if(idx > -1) {
-                    clone[idx] = { ...clone[idx], ...common };
-                    if(!clone[idx].projects) clone[idx].projects = {};
-                    clone[idx].projects[pName] = newProj;
-                } else {
-                    clone.push({ ...common, id: id, projects: { [pName]: newProj } });
-                }
-            }
-            saveToFirebase(clone);
-            hide(els.storeModal);
-            document.getElementById('save-store-btn').disabled = false;
-        });
-
-        // --- KPIS & HELPERS ---
-        function calcKPIs() {
-            const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
-            allFlattenedData.forEach(r => {
-                k.total.add(r.id);
-                if(r.status === 'pendente') k.pend++;
-                else if(r.status === 'pendente-associa') k.assoc++;
-                else if(r.status === 'finalizado') k.fin++;
-                else if(r.status === 'andamento') k.and++;
-            });
-            els.kpis.total.textContent = k.total.size;
-            els.kpis.pendente.textContent = k.pend;
-            els.kpis.associa.textContent = k.assoc;
-            els.kpis.finalizado.textContent = k.fin;
-            els.kpis.andamento.textContent = k.and;
-        }
-
-        function showToast(msg, err, duration=3000) {
-            els.toast.textContent = msg;
-            els.toast.className = `fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg z-50 transform transition-all duration-300 ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`;
-            setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), duration);
-        }
-
-        // --- INIT & LISTENERS ---
-        function openObs(e) {
-            const {id, p} = e.currentTarget.dataset;
-            const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
-            document.getElementById('obs-modal-textarea').value = row?.observation || '';
-            document.getElementById('save-obs-btn').onclick = () => {
-                updateGeneric(id, p, (pr) => pr.observation = document.getElementById('obs-modal-textarea').value);
-                hide(els.obsModal);
-            };
-            show(els.obsModal);
-        }
-
-        function confirmDel(e) {
-            const {id, p} = e.currentTarget.dataset;
-            document.getElementById('confirm-delete-btn').onclick = () => {
-                const clone = JSON.parse(JSON.stringify(allStoresData));
-                const idx = clone.findIndex(s => s && s.id === id);
-                if(idx > -1) {
-                    delete clone[idx].projects[p];
-                    saveToFirebase(clone);
-                }
-                hide(els.deleteModal);
-            };
-            show(els.deleteModal);
-        }
-
-        function editStore(e) {
-            const id = e.currentTarget.dataset.id;
-            const d = allFlattenedData.find(r => r.id === id);
-            if(!d) return;
-            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
-            document.getElementById('cnpj').value = id; document.getElementById('cnpj').readOnly = true;
-            document.getElementById('store-modal-title').textContent = "Editar Loja";
-            document.getElementById('form-project-group').style.display = 'none';
-            document.getElementById('form-meta-group').style.display = 'none';
-            document.getElementById('form-observation-group').style.display = 'none';
-            document.getElementById('nome-projeto').required = false;
-            show(els.storeModal);
-        }
-
-        function openChart(e) {
-            const {id, p} = e.currentTarget.dataset;
-            currentChartRowData = allFlattenedData.find(r => r.id === id && r.projectName === p);
-            renderChart('number');
-            show(els.chartModal);
-        }
-
-        function renderChart(fmt) {
-            if(!currentChartRowData) return;
-            const ctx = document.getElementById('indicator-chart').getContext('2d');
-            if(currentChartInstance) currentChartInstance.destroy();
-            const data = indicatorMonths.map(m => Number(currentChartRowData.indicators?.[m.id]) || 0);
-            const goal = Number(currentChartRowData.goal) || 0;
-            
-            currentChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: { labels: chartLabels, datasets: [{ label: 'Realizado', data, borderColor: '#FF5510', backgroundColor: 'rgba(255,85,16,0.1)', fill: true, tension: 0.1 }] },
-                options: {
-                    responsive: true,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { 
-                        annotation: { annotations: { line1: { type: 'line', yMin: goal, yMax: goal, borderColor: 'red', borderWidth: 2, borderDash: [5,5], label: { enabled: true, content: 'Meta: '+goal } } } }
-                    }
-                }
-            });
-        }
-        
-        document.getElementById('generate-chart-btn').addEventListener('click', () => {
-             const proj = document.getElementById('chart-filter-project').value;
-             const ge = document.getElementById('chart-filter-ge').value;
-             const term = document.getElementById('chart-filter-cnpj-loja').value.toLowerCase();
-             if(!proj) { showToast("Selecione um projeto", true); return; }
-
-             const rows = allFlattenedData.filter(r => r.projectName === proj && (!ge || r.ge === ge) && (!term || r.nomeLoja.toLowerCase().includes(term) || r.id.includes(term)));
-             const ctx = document.getElementById('consolidated-chart').getContext('2d');
-             if(consolidatedChartInstance) consolidatedChartInstance.destroy();
-             
-             consolidatedChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartLabels,
-                    datasets: rows.map(r => ({
-                        label: r.nomeLoja,
-                        data: indicatorMonths.map(m => Number(r.indicators?.[m.id])||0),
-                        borderColor: '#'+Math.floor(Math.random()*16777215).toString(16),
-                        tension: 0.1, fill: false
-                    }))
-                },
-                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
-             });
-        });
-
-        const show = (el) => el.classList.remove('hidden');
-        const hide = (el) => el.classList.add('hidden');
-        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v.value]))));
-        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => els.filters[k].value = v); };
-        
-        document.getElementById('open-modal-btn').onclick = () => {
-            els.storeForm.reset(); document.getElementById('cnpj').readOnly = false;
-            document.getElementById('store-modal-title').textContent = "Nova Loja";
-            document.getElementById('form-project-group').style.display = 'block';
-            document.getElementById('form-meta-group').style.display = 'block';
-            document.getElementById('form-observation-group').style.display = 'block';
-            document.getElementById('nome-projeto').required = true;
-            show(els.storeModal);
-        };
-        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.storeModal));
-        document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
-        ['cancel-obs-btn','close-obs-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
-        document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
-        document.getElementById('toggle-filter-btn').onclick = () => { els.sidebar.classList.toggle('-translate-x-full'); els.mainContent.classList.toggle('md:ml-72'); };
-        document.getElementById('apply-filters-btn').onclick = () => { saveFilters(); applyFilters(); };
-        document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
-        els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
-        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
-
-        const pSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
-        pSelects.forEach(sel => {
-            sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione</option>' : '<option value="">Todos</option>';
-            projectList.forEach(p => sel.add(new Option(p, p)));
-        });
-
-    </script>
