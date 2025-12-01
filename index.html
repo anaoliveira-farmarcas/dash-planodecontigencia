@@ -720,4 +720,471 @@
         document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
         ['cancel-obs-btn','close-obs-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
         document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
-        document.getElementById('toggle-
+        document.getElementById('toggle-filter-btn').onclick = () => { els.sidebar.classList.toggle('-translate-x-full'); els.mainContent.classList.toggle('md:ml-72'); };
+        document.getElementById('apply-filters-btn').onclick = () => { saveFilters(); applyFilters(); };
+        document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
+        els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
+        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
+        
+        // Input da sidebar unificado
+        document.getElementById('filter-loja').addEventListener('input', () => { saveFilters(); applyFilters(); });
+
+    </script>
+
+    <script type="text/babel">
+        // --- ÍCONES ---
+        const IconBase = ({ children, size = 24, className = "", ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+        );
+        const Target = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>);
+        const MinusCircle = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
+        const AlertTriangle = (props) => (<IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
+        const Hammer = (props) => (<IconBase {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
+        const CheckCircle2 = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
+        const ArrowRight = (props) => (<IconBase {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>);
+        const BarChart3 = (props) => (<IconBase {...props}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>);
+        const LayoutList = (props) => (<IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></IconBase>);
+        const Grip = (props) => (<IconBase {...props}><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></IconBase>);
+        const Check = (props) => (<IconBase {...props}><path d="M20 6 9 17l-5-5"/></IconBase>);
+        const Trophy = (props) => (<IconBase {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>);
+        const Store = (props) => (<IconBase {...props}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>);
+        const Users = (props) => (<IconBase {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>);
+        const Plus = (props) => (<IconBase {...props}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>);
+        const Pencil = (props) => (<IconBase {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
+        const Trash2 = (props) => (<IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
+        const XIcon = (props) => (<IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
+        const Save = (props) => (<IconBase {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
+        const Filter = (props) => (<IconBase {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>);
+        const Download = (props) => (<IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>);
+        const Upload = (props) => (<IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>);
+
+        const EXCEL_COLUMNS = [
+            { key: 'cnpj', label: 'CNPJ' }, { key: 'ge', label: 'GE' }, { key: 'associado', label: 'ASSOCIADO' }, { key: 'loja', label: 'NOME LOJA' },
+            { key: 'mix', label: 'MIX DE PRODUTOS' }, { key: 'precificacao', label: 'PRECIFICAÇÃO' }, { key: 'pbm', label: 'PBM' }, { key: 'pec', label: 'PEC' },
+            { key: 'setorizacao', label: 'SETORIZAÇÃO' }, { key: 'marcasProprias', label: 'MARCAS PROPRIAS' }, { key: 'gc', label: 'GC (FARMACINHA)' },
+            { key: 'delivery', label: 'DELIVERY' }, { key: 'inspire', label: 'INSPIRE +' }, { key: 'dermaclub', label: 'DERMACLUB' },
+            { key: 'servicos', label: 'SERVIÇOS FARM.' }, { key: 'idoso', label: 'CAMPANHA IDOSO' }, { key: 'especiais', label: 'MEDICAMENTOS ESPECIAIS' },
+            { key: 'fideliza', label: 'FIDELIZA MAIS' }
+        ];
+
+        const EXCEL_LABEL_TO_KEY = EXCEL_COLUMNS.reduce((acc, col) => { acc[col.label.trim().toUpperCase()] = col.key; return acc; }, {});
+        const projectLabels = { mix: "Mix de Produtos", precificacao: "Precificação", pbm: "PBM", pec: "PEC", setorizacao: "Setorização", marcasProprias: "Marcas Próprias", gc: "Gerenc. Categoria", delivery: "Delivery", inspire: "Inspire +", dermaclub: "DermaClub", servicos: "Serviços Farm.", idoso: "Campanha Idoso", especiais: "Med. Especiais", fideliza: "Fideliza Mais" };
+        const STATUS_MAP = { 'low_priority': 'BAIXA PRIORIDADE', 'priority_todo': 'A FAZER', 'priority_doing': 'TRABALHANDO', 'priority_done': 'FINALIZADO' };
+        const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done', 'BAIXA': 'low_priority', 'PENDENTE': 'priority_todo', 'EM ANDAMENTO': 'priority_doing', 'CONCLUIDO': 'priority_done', 'X': 'priority_todo' };
+
+        const initialDataRaw = [
+          { id: 1, associado: "EXEMPLO", loja: "LOJA EXEMPLO", ge: "0", cnpj: "00.000.000/0001-00", projetos: { mix: false } }
+        ];
+
+        const ProjectBadge = ({ status, label, onClick }) => {
+          let bgColor = "", icon = null;
+          if (status === 'low_priority') { bgColor = "bg-slate-50 text-slate-400 border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 hover:bg-slate-100 cursor-pointer"; icon = <MinusCircle size={12} />; }
+          else if (status === 'priority_todo') { bgColor = "bg-red-50 text-red-600 border-red-200 shadow-sm cursor-pointer hover:bg-red-100 font-medium"; icon = <AlertTriangle size={14} className="animate-pulse" />; }
+          else if (status === 'priority_doing') { bgColor = "bg-orange-50 text-[#FF5510] border-orange-200 shadow-sm cursor-pointer hover:bg-orange-100 font-medium"; icon = <Hammer size={14} />; }
+          else if (status === 'priority_done') { bgColor = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm cursor-pointer hover:bg-emerald-100 font-medium"; icon = <CheckCircle2 size={14} className="text-emerald-500" />; }
+          
+          return (
+            <div onClick={onClick} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs transition-all duration-200 group relative select-none ${bgColor}`} title="Clique para alterar o status">
+              <div className={`transition-transform duration-300 ${status === 'priority_done' ? 'scale-100' : ''}`}>{icon}</div>
+              <span className="truncate flex-1">{label}</span>
+            </div>
+          );
+        };
+
+        const ProgressBar = ({ done, totalPriority }) => {
+          const percentage = totalPriority > 0 ? Math.round((done / totalPriority) * 100) : 0;
+          return (
+            <div className="w-full">
+              <div className="flex justify-between text-xs mb-1"><span className="font-semibold text-slate-700">{done} de {totalPriority} Resolvidos</span><span className={`font-bold ${percentage === 100 ? 'text-emerald-600' : 'text-[#FF5510]'}`}>{percentage}%</span></div>
+              <div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-1000 ease-out shadow-sm relative overflow-hidden ${percentage === 100 ? 'bg-emerald-500' : 'bg-[#FF5510]'}`} style={{ width: `${percentage}%` }}></div></div>
+            </div>
+          );
+        };
+
+        const StoreFormModal = ({ isOpen, onClose, onSave, editingData }) => {
+            const [formData, setFormData] = React.useState({ associado: '', loja: '', ge: '', cnpj: '' });
+            React.useEffect(() => {
+                if (isOpen && editingData) { setFormData({ associado: editingData.associado, loja: editingData.loja, ge: editingData.ge, cnpj: editingData.cnpj }); } 
+                else if (isOpen) { setFormData({ associado: '', loja: '', ge: '', cnpj: '' }); }
+            }, [isOpen, editingData]);
+            if (!isOpen) return null;
+            const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+            const handleSubmit = (e) => { e.preventDefault(); onSave(formData); };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50"><h3 className="font-bold text-lg text-slate-800">{editingData ? 'Editar Loja' : 'Adicionar Nova Loja'}</h3><button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><XIcon size={20} /></button></div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Associado</label><input type="text" name="associado" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF5510] outline-none" value={formData.associado} onChange={handleChange} /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Nome da Loja</label><input type="text" name="loja" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF5510] outline-none" value={formData.loja} onChange={handleChange} /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">G.E</label><input type="text" name="ge" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF5510] outline-none" value={formData.ge} onChange={handleChange} /></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">CNPJ</label><input type="text" name="cnpj" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF5510] outline-none" value={formData.cnpj} onChange={handleChange} /></div>
+                            </div>
+                            <div className="pt-4 flex gap-3"><button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium">Cancelar</button><button type="submit" className="flex-1 px-4 py-2 bg-[#FF5510] text-white rounded-lg hover:bg-[#E0480C] font-medium flex items-center justify-center gap-2"><Save size={18} />Salvar</button></div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        function ContingencyPlan() {
+          const [viewMode, setViewMode] = React.useState('pipeline');
+          const [associados, setAssociados] = React.useState([]);
+          const [isModalOpen, setIsModalOpen] = React.useState(false);
+          const [editingId, setEditingId] = React.useState(null);
+          const [selectedProject, setSelectedProject] = React.useState('mix');
+          const fileInputRef = React.useRef(null);
+
+          React.useEffect(() => {
+            const savedData = localStorage.getItem('contingencyDataV4');
+            if (savedData) { setAssociados(JSON.parse(savedData)); } 
+            else {
+                // Se não tiver dados, inicia vazio
+                setAssociados([]);
+            }
+          }, []);
+
+          React.useEffect(() => { if (associados.length > 0) localStorage.setItem('contingencyDataV4', JSON.stringify(associados)); }, [associados]);
+
+          const handleAddNew = () => { setEditingId(null); setIsModalOpen(true); };
+          const handleEdit = (id) => { setEditingId(id); setIsModalOpen(true); };
+          const handleDelete = (id) => { if (confirm('Excluir loja?')) setAssociados(prev => prev.filter(item => item.id !== id)); };
+          const handleSaveForm = (formData) => {
+              if (editingId) setAssociados(prev => prev.map(item => item.id === editingId ? { ...item, ...formData } : item));
+              else {
+                  const newId = Math.max(...associados.map(a => a.id), 0) + 1;
+                  const emptyProjects = {};
+                  Object.keys(projectLabels).forEach(key => emptyProjects[key] = 'low_priority');
+                  setAssociados(prev => [{ id: newId, ...formData, projetos: emptyProjects }, ...prev]);
+              }
+              setIsModalOpen(false);
+          };
+
+          const handleExportXLSX = () => {
+              const exportData = associados.map(item => {
+                  const row = { CNPJ: item.cnpj || '', GE: item.ge || '', ASSOCIADO: item.associado || '', "NOME LOJA": item.loja || '' };
+                  EXCEL_COLUMNS.slice(4).forEach(col => { row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE'; });
+                  return row;
+              });
+              const wb = XLSX.utils.book_new();
+              const ws = XLSX.utils.json_to_sheet(exportData);
+              const wscols = Object.keys(exportData[0] || {}).map(k => ({ wch: k.length + 5 }));
+              ws['!cols'] = wscols;
+              XLSX.utils.book_append_sheet(wb, ws, "Contingencia");
+              XLSX.writeFile(wb, "Modelo_Contingencia_CO.xlsx");
+          };
+
+          const handleImportClick = () => fileInputRef.current.click();
+          const handleFileChange = (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                  const bstr = evt.target.result;
+                  const wb = XLSX.read(bstr, { type: 'binary' });
+                  const wsname = wb.SheetNames[0];
+                  const ws = wb.Sheets[wsname];
+                  const data = XLSX.utils.sheet_to_json(ws);
+
+                  if (data.length > 0) {
+                      let currentId = Math.max(...associados.map(a => a.id), 0) + 1;
+                      const newEntries = data.map(row => {
+                          const projetos = {};
+                          Object.keys(projectLabels).forEach(key => {
+                              const label = EXCEL_COLUMNS.find(c => c.key === key)?.label;
+                              const val = row[label] ? row[label].toString().toUpperCase().trim() : '';
+                              projetos[key] = STATUS_MAP_REVERSE[val] || 'low_priority';
+                          });
+                          return { id: currentId++, associado: row['ASSOCIADO'] || '', loja: row['NOME LOJA'] || '', ge: row['GE'] ? row['GE'].toString() : '', cnpj: row['CNPJ'] ? row['CNPJ'].toString() : '', projetos };
+                      });
+                      setAssociados(prev => [...prev, ...newEntries]);
+                      alert(`${newEntries.length} lojas importadas com sucesso!`);
+                  }
+              };
+              reader.readAsBinaryString(file);
+              e.target.value = null;
+          };
+
+          const togglePriorityStatus = (id, projectKey) => {
+            setAssociados(prev => prev.map(item => {
+                if (item.id === id) {
+                    const curr = item.projetos[projectKey];
+                    let next = 'low_priority';
+                    if (curr === 'low_priority') next = 'priority_todo';
+                    else if (curr === 'priority_todo') next = 'priority_doing';
+                    else if (curr === 'priority_doing') next = 'priority_done';
+                    else if (curr === 'priority_done') next = 'low_priority';
+                    return { ...item, projetos: { ...item.projetos, [projectKey]: next } };
+                }
+                return item;
+            }));
+          };
+
+          const calculateStats = (projetos) => {
+            const vals = Object.values(projetos);
+            const totalPriority = vals.filter(v => v !== 'low_priority').length;
+            const doneCount = vals.filter(v => v === 'priority_done').length;
+            const todoCount = vals.filter(v => v === 'priority_todo').length;
+            const doingCount = vals.filter(v => v === 'priority_doing').length;
+            return { totalPriority, doneCount, todoCount, doingCount };
+          };
+
+          const allStats = associados.map(a => calculateStats(a.projetos));
+          const totalPriorityAll = allStats.reduce((acc, curr) => acc + curr.totalPriority, 0);
+          const totalTodoAll = allStats.reduce((acc, curr) => acc + curr.todoCount, 0);
+          const totalDoingAll = allStats.reduce((acc, curr) => acc + curr.doingCount, 0);
+          const totalDoneAll = allStats.reduce((acc, curr) => acc + curr.doneCount, 0);
+          const avgProgress = totalPriorityAll > 0 ? (totalDoneAll / totalPriorityAll) * 100 : 0;
+          const uniqueAssociados = new Set(associados.map(a => a.associado)).size;
+
+          const todoList = associados.filter(a => a.projetos[selectedProject] === 'priority_todo');
+          const doingList = associados.filter(a => a.projetos[selectedProject] === 'priority_doing');
+          const doneList = associados.filter(a => a.projetos[selectedProject] === 'priority_done');
+
+          return (
+            <div className="font-sans text-slate-800 pb-20">
+              <div className="relative overflow-hidden mb-8 shadow-lg rounded-xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5510] to-[#FF8040]"></div>
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white opacity-10 blur-3xl"></div>
+                <div className="relative max-w-7xl mx-auto px-6 py-10 md:py-12">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-white/80 text-sm font-medium tracking-wider uppercase mb-2"><Target size={16} />Plano de Contingência</div>
+                      <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-2 drop-shadow-sm">Piloto Centro-Oeste</h1>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-white/90 text-lg font-light max-w-2xl">Gestão estratégica de projetos e prioridades.</p>
+                        <div className="flex items-center gap-4 mt-2">
+                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20"><Users size={18} className="text-white" /><span className="text-white font-semibold text-sm">{uniqueAssociados} Associados</span></div>
+                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20"><Store size={18} className="text-white" /><span className="text-white font-semibold text-sm">{associados.length} Lojas</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={handleExportXLSX} className="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm" title="Baixar Modelo Excel (.xlsx)"><Download size={20} /></button>
+                        <button onClick={handleImportClick} className="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm" title="Importar Excel (.xlsx)"><Upload size={20} /></button>
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                        <button onClick={handleAddNew} className="bg-white text-[#FF5510] hover:bg-orange-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105 flex items-center gap-2"><Plus size={20} />Adicionar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto px-1">
+                <div className="flex flex-wrap gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-center justify-center md:justify-start select-none">
+                  <span className="text-sm font-bold text-slate-700 mr-2">Status:</span>
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200"><MinusCircle size={14} /><span>Baixa</span></div>
+                  <ArrowRight size={14} className="text-slate-300" />
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-200"><AlertTriangle size={14} /><span>A Fazer</span></div>
+                  <ArrowRight size={14} className="text-slate-300" />
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-[#FF5510] bg-orange-50 px-3 py-1.5 rounded-full border border-orange-200"><Hammer size={14} /><span>Trabalhando</span></div>
+                  <ArrowRight size={14} className="text-slate-300" />
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100"><CheckCircle2 size={14} /><span>Finalizado</span></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600"><AlertTriangle size={24} /></div>
+                    <div><div className="text-slate-500 text-sm font-medium">A Fazer</div><div className="text-2xl font-bold text-slate-800">{totalTodoAll}</div></div>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-[#FF5510]"><Hammer size={24} /></div>
+                    <div><div className="text-slate-500 text-sm font-medium">Em Trabalho</div><div className="text-2xl font-bold text-slate-800">{totalDoingAll}</div></div>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><CheckCircle2 size={24} /></div>
+                    <div><div className="text-slate-500 text-sm font-medium">Finalizados</div><div className="text-2xl font-bold text-slate-800">{totalDoneAll}</div></div>
+                  </div>
+                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><Trophy size={24} /></div>
+                    <div className="flex-1"><div className="text-slate-500 text-sm font-medium">Progresso Geral</div><div className="text-lg font-bold text-slate-800">{avgProgress.toFixed(0)}%</div><div className="w-full bg-gray-100 h-1.5 rounded-full mt-1"><div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${avgProgress}%` }}></div></div></div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit border border-slate-200 shadow-sm">
+                  <button onClick={() => setViewMode('pipeline')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'pipeline' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><LayoutList size={18} />Visão Esteira</button>
+                  <button onClick={() => setViewMode('grid')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'grid' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><Grip size={18} />Batalha Naval</button>
+                  <button onClick={() => setViewMode('project_report')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'project_report' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><Filter size={18} />Relatório por Projeto</button>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+                  
+                  {viewMode === 'pipeline' && (
+                    <div className="p-8">
+                      <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3"><div className="p-2 bg-orange-100 rounded-lg text-[#FF5510]"><BarChart3 size={20}/></div>Painel de Acompanhamento</h3>
+                      </div>
+                      <div className="grid grid-cols-1 gap-8">
+                        {associados.map((item) => {
+                          const stats = calculateStats(item.projetos);
+                          return (
+                            <div key={item.id} className="bg-white border border-slate-100 rounded-xl p-6 hover:border-orange-200 hover:shadow-lg transition-all duration-300 group relative">
+                              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => handleEdit(item.id)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={16} /></button>
+                                  <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"><Trash2 size={16} /></button>
+                              </div>
+                              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-6">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-[#FF5510] group-hover:text-white transition-colors">{item.associado.charAt(0)}</div>
+                                  <div>
+                                      <h4 className="font-bold text-slate-800 text-lg group-hover:text-[#FF5510] transition-colors">{item.associado}</h4>
+                                      <div className="flex items-center gap-2 text-sm text-slate-500 mb-1"><Store size={14} />{item.loja}</div>
+                                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 w-fit"><span className="font-semibold text-slate-600">G.E: {item.ge}</span><span className="w-px h-3 bg-slate-300"></span><span>CNPJ: {item.cnpj}</span></div>
+                                  </div>
+                                </div>
+                                <div className="w-full md:w-1/3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                  <ProgressBar done={stats.doneCount} totalPriority={stats.totalPriority} />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                {Object.entries(item.projetos).map(([key, status]) => (
+                                  <ProjectBadge key={key} label={projectLabels[key]} status={status} onClick={() => togglePriorityStatus(item.id, key)} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewMode === 'grid' && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left border-collapse">
+                        <thead className="bg-slate-50 text-slate-600 font-semibold">
+                          <tr>
+                            <th className="px-4 py-5 min-w-[50px] border-b border-slate-200 text-center">Ações</th>
+                            <th className="px-6 py-5 min-w-[220px] border-b border-slate-200 align-bottom">Associado / Loja</th>
+                            <th className="px-4 py-5 min-w-[100px] border-b border-slate-200 align-bottom text-center">G.E / CNPJ</th>
+                            {Object.values(projectLabels).map((label) => (
+                              <th key={label} className="px-1 py-4 border-b border-slate-200 text-center align-bottom">
+                                <div className="h-32 flex items-end justify-center pb-2">
+                                   <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }} className="text-xs uppercase tracking-wider whitespace-nowrap">{label}</span>
+                                </div>
+                              </th>
+                            ))}
+                            <th className="px-4 py-5 text-center border-b border-slate-200 min-w-[80px] align-bottom">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {associados.map((item) => {
+                             const stats = calculateStats(item.projetos);
+                             return (
+                              <tr key={item.id} className="hover:bg-orange-50/30 transition-colors group">
+                                <td className="px-4 py-4 border-r border-slate-50 text-center">
+                                    <div className="flex flex-col gap-2 items-center justify-center opacity-30 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEdit(item.id)} className="text-blue-500 hover:text-blue-700"><Pencil size={16}/></button>
+                                        <button onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 border-r border-slate-50">
+                                  <div className="font-bold text-slate-700 group-hover:text-[#FF5510] transition-colors">{item.associado}</div>
+                                  <div className="text-xs text-slate-400 mt-0.5">{item.loja}</div>
+                                </td>
+                                <td className="px-4 py-4 border-r border-slate-50 text-center">
+                                  <div className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded inline-block mb-1">{item.ge}</div>
+                                  <div className="text-[10px] text-slate-400">{item.cnpj}</div>
+                                </td>
+                                {Object.entries(item.projetos).map(([key, status]) => (
+                                  <td key={key} onClick={() => togglePriorityStatus(item.id, key)} className="px-2 py-3 text-center border-r border-slate-50/50 cursor-pointer hover:bg-white transition-all" title="Clique para alterar status">
+                                    <div className="flex justify-center transform hover:scale-110 transition-transform">
+                                      {status === 'priority_done' ? <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm"><Check size={16} strokeWidth={3} /></div> : 
+                                       status === 'priority_doing' ? <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#FF5510] flex items-center justify-center shadow-sm border border-orange-200"><Hammer size={16} /></div> : 
+                                       status === 'priority_todo' ? <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shadow-sm border border-red-200"><AlertTriangle size={16} /></div> : 
+                                       <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-300 hover:text-slate-400 hover:bg-slate-100 flex items-center justify-center border border-transparent hover:border-slate-200 transition-all"><MinusCircle size={12} /></div>}
+                                    </div>
+                                  </td>
+                                ))}
+                                <td className="px-4 py-4 text-center">
+                                   <div className="flex flex-col items-center justify-center"><span className="text-lg font-bold text-[#FF5510]">{stats.doneCount}/{stats.totalPriority}</span></div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {viewMode === 'project_report' && (
+                    <div className="p-8">
+                        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3"><div className="p-2 bg-orange-100 rounded-lg text-[#FF5510]"><Filter size={20}/></div>Filtro por Projeto de Ação</h3>
+                            <div className="w-full md:w-auto">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Selecionar Projeto</label>
+                                <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="w-full md:w-64 p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:ring-2 focus:ring-[#FF5510] outline-none">
+                                    {Object.entries(projectLabels).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* COLUNA A FAZER */}
+                            <div className="bg-red-50/50 rounded-2xl border border-red-100 overflow-hidden flex flex-col h-[600px]">
+                                <div className="bg-red-100/80 px-6 py-4 border-b border-red-200 flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-2 text-red-800 font-bold"><AlertTriangle size={20} />A Fazer</div>
+                                    <span className="bg-white text-red-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{todoList.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1">
+                                    {todoList.length === 0 ? <div className="text-center py-10 text-slate-400">Nenhuma pendência.</div> : 
+                                        <div className="space-y-3">{todoList.map(item => (
+                                            <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-red-100 flex items-start justify-between group hover:shadow-md transition-shadow">
+                                                <div><div className="font-bold text-slate-800">{item.loja}</div><div className="text-xs text-slate-500 mt-1">{item.associado}</div></div>
+                                                <button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-orange-100 hover:text-orange-600 transition-colors"><ArrowRight size={16} /></button>
+                                            </div>
+                                        ))}</div>
+                                    }
+                                </div>
+                            </div>
+
+                            {/* COLUNA TRABALHANDO */}
+                            <div className="bg-orange-50/50 rounded-2xl border border-orange-100 overflow-hidden flex flex-col h-[600px]">
+                                <div className="bg-orange-100/80 px-6 py-4 border-b border-orange-200 flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-2 text-orange-800 font-bold"><Hammer size={20} />Trabalhando</div>
+                                    <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{doingList.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1">
+                                    {doingList.length === 0 ? <div className="text-center py-10 text-slate-400">Nenhum em andamento.</div> : 
+                                        <div className="space-y-3">{doingList.map(item => (
+                                            <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex items-start justify-between group hover:shadow-md transition-shadow">
+                                                <div><div className="font-bold text-slate-800">{item.loja}</div><div className="text-xs text-slate-500 mt-1">{item.associado}</div></div>
+                                                <button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="p-2 bg-orange-50 text-orange-500 rounded-lg hover:bg-emerald-100 hover:text-emerald-600 transition-colors"><Check size={16} /></button>
+                                            </div>
+                                        ))}</div>
+                                    }
+                                </div>
+                            </div>
+
+                            {/* COLUNA FINALIZADO */}
+                            <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 overflow-hidden flex flex-col h-[600px]">
+                                <div className="bg-emerald-100/80 px-6 py-4 border-b border-emerald-200 flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-2 text-emerald-800 font-bold"><CheckCircle2 size={20} />Finalizado</div>
+                                    <span className="bg-white text-emerald-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{doneList.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1">
+                                    {doneList.length === 0 ? <div className="text-center py-10 text-slate-400">Nenhum finalizado.</div> : 
+                                        <div className="space-y-3">{doneList.map(item => (
+                                            <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 flex items-start justify-between group hover:shadow-md transition-shadow">
+                                                <div><div className="font-bold text-slate-800">{item.loja}</div><div className="text-xs text-slate-500 mt-1">{item.associado}</div></div>
+                                                <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg"><Check size={16} /></div>
+                                            </div>
+                                        ))}</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <StoreFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveForm} editingData={editingId ? associados.find(a => a.id === editingId) : null} />
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('react-root'));
+        root.render(<ContingencyPlan />);
+    </script>
+</body>
+</html>
