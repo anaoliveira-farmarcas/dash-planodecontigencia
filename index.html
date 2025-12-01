@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Projetos - Farmarcas</title>
+    <title>Dashboard Integrado - Farmarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
@@ -11,10 +11,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
     
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
         
-        /* Estilos personalizados */
+        /* Estilos do Código Original */
         .status-select {
             padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
             appearance: none; -webkit-appearance: none;
@@ -36,125 +42,155 @@
         #toast { transition: transform 0.3s, opacity 0.3s; }
         .obs-filled { color: #3b82f6; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Estilos adicionais para o menu de navegação */
+        .nav-item { cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; color: #4b5563; }
+        .nav-item:hover { background-color: #f3f4f6; color: #FF5510; }
+        .nav-item.active { background-color: #fff7ed; color: #FF5510; font-weight: 600; border-left: 4px solid #FF5510; }
+        .nav-item i { width: 24px; text-align: center; margin-right: 12px; }
+
+        /* Estilos para o React Modal Overlay (Código 2) */
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 60; }
+        
+        /* Ajuste de fonte para a área do React */
+        #react-root { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <aside id="filter-sidebar" class="fixed top-0 left-0 z-30 w-72 h-screen bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-        <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
-        <p class="text-xs text-gray-500 mb-4">Filtros de Analista, GE, etc. aparecerão conforme você cadastrar lojas.</p>
-        <div class="space-y-4 overflow-y-auto h-[calc(100vh-160px)] pr-2">
-            <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            
-            <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-            
-            <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar CNPJ"></div>
-            <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar Loja"></div>
-        </div>
-        <div class="absolute bottom-6 left-6 right-6 space-y-3">
-            <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
-            <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar Filtros</button>
+    <aside id="filter-sidebar" class="fixed top-0 left-0 z-50 w-72 h-screen bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+        <h3 class="text-2xl font-extrabold text-[#FF5510] mb-8 px-2">Farmarcas <span class="text-gray-400 text-sm block font-normal">Dashboard</span></h3>
+        
+        <nav class="mb-8">
+            <ul>
+                <li id="tab-dashboard" class="nav-item active" onclick="switchTab('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard Geral
+                </li>
+                <li id="tab-piloto" class="nav-item" onclick="switchTab('piloto')">
+                    <i class="fa-solid fa-flask"></i> Projeto Piloto
+                </li>
+            </ul>
+        </nav>
+
+        <hr class="border-gray-200 mb-6">
+
+        <div id="sidebar-filters-container">
+            <h3 class="text-sm font-bold text-gray-500 uppercase mb-4 px-2">Filtros Dashboard</h3>
+            <div class="space-y-3 overflow-y-auto h-[calc(100vh-380px)] pr-2 custom-scroll">
+                <div><label class="block text-xs font-medium text-gray-500">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                <div><label class="block text-xs font-medium text-gray-500">GE</label><select id="filter-ge" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                <div><label class="block text-xs font-medium text-gray-500">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                <div><label class="block text-xs font-medium text-gray-500">UF</label><select id="filter-uf" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                <div><label class="block text-xs font-medium text-gray-500">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                <div><label class="block text-xs font-medium text-gray-500">CNPJ / Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded border-gray-300 text-sm" placeholder="Busca rápida..."></div>
+            </div>
+            <div class="mt-4 space-y-2">
+                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded text-sm font-semibold hover:bg-[#E04A0E]">Aplicar</button>
+                <button id="clear-filters-btn" class="w-full bg-gray-100 text-gray-600 py-2 rounded text-sm hover:bg-gray-200">Limpar</button>
+            </div>
         </div>
     </aside>
 
-    <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
-        <header class="mb-6">
-            <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
-                <div class="flex items-center">
-                    <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
-                    <h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard Online</h1>
-                </div>
-                <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow">
-                    <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
-                </button>
-            </nav>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black">
-                    <h4 class="text-sm font-medium text-gray-500 uppercase">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500">
-                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400">
-                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
-                    <h4 class="text-sm font-medium text-gray-500 uppercase">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
-                    <h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p>
-                </div>
-            </div>
-        </header>
+    <main id="main-content" class="md:ml-72 transition-all duration-300 p-2 md:p-6 min-h-screen">
+        
+        <div class="md:hidden mb-4">
+            <button id="toggle-filter-btn" class="text-gray-600 p-2 bg-white rounded shadow"><i class="fa-solid fa-bars"></i> Menu</button>
+        </div>
 
-        <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
-            <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="">Todos</option></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="CNPJ ou Loja"></div>
-                <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full">Gerar Gráfico</button>
-            </div>
-            <div class="relative h-96"><canvas id="consolidated-chart"></canvas></div>
-        </section>
-
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="p-4 border-b">
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]">
+        <div id="view-dashboard">
+            <header class="mb-6">
+                <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6 border-l-4 border-[#FF5510]">
+                    <h1 class="text-2xl font-extrabold text-gray-800">Visão Geral</h1>
+                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 text-sm shadow">
+                        <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                    </button>
+                </nav>
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-black">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-red-500">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-yellow-400">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase">Pend. Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-2xl font-extrabold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-blue-500">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-green-500">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-800">0</p>
+                    </div>
                 </div>
-            </div>
-            <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 sticky-header">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
-                        <tr><td colspan="29" class="text-center p-8 text-gray-500">Banco de dados conectado. Adicione uma loja para começar!</td></tr>
-                    </tbody>
-                </table>
+            </header>
+
+            <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-bold text-gray-800 mb-4">Evolução Mensal</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 items-end">
+                    <div><label class="block text-xs font-medium text-gray-500">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
+                    <div><label class="block text-xs font-medium text-gray-500">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded border-gray-300 text-sm"><option value="">Todos</option></select></div>
+                    <div><label class="block text-xs font-medium text-gray-500">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded border-gray-300 text-sm" placeholder="CNPJ ou Loja"></div>
+                    <button id="generate-chart-btn" class="bg-gray-800 text-white py-2 px-4 rounded text-sm font-semibold hover:bg-black h-[38px] w-full">Gerar Gráfico</button>
+                </div>
+                <div class="relative h-72"><canvas id="consolidated-chart"></canvas></div>
+            </section>
+
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="p-3 border-b flex items-center">
+                    <i class="fa-solid fa-search text-gray-400 mr-2"></i>
+                    <input type="text" id="search-input" placeholder="Pesquisar na tabela..." class="w-full outline-none text-sm text-gray-700">
+                </div>
+                <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky-header">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="29" class="text-center p-8 text-gray-500">Conectando ao Firebase...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+        <div id="view-piloto" class="hidden">
+            <div id="react-root"></div>
+        </div>
+
     </main>
 
-    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
+    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-[100]">Msg</div>
 
-    <div id="store-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="store-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <header class="flex justify-between items-center p-5 border-b">
                 <h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2>
@@ -193,7 +229,7 @@
         </div>
     </div>
 
-    <div id="chart-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="chart-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
             <header class="flex justify-between items-center p-5 border-b">
                 <h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2>
@@ -210,7 +246,7 @@
         </div>
     </div>
 
-    <div id="obs-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="obs-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
             <header class="flex justify-between items-center p-5 border-b"><h2 id="obs-modal-title" class="font-bold">Obs</h2></header>
             <div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div>
@@ -218,7 +254,7 @@
         </div>
     </div>
 
-    <div id="delete-confirm-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="delete-confirm-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h2 class="text-xl font-bold mb-4">Excluir?</h2>
             <p id="delete-modal-text" class="mb-6">Tem certeza?</p>
@@ -226,13 +262,34 @@
         </div>
     </div>
 
+    <script>
+        function switchTab(tabName) {
+            // Atualiza classes do menu
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            // Alterna visibilidade das views
+            const dashboardView = document.getElementById('view-dashboard');
+            const pilotoView = document.getElementById('view-piloto');
+            const sidebarFilters = document.getElementById('sidebar-filters-container');
+
+            if (tabName === 'dashboard') {
+                dashboardView.classList.remove('hidden');
+                pilotoView.classList.add('hidden');
+                sidebarFilters.style.display = 'block'; // Mostra filtros da sidebar
+            } else {
+                dashboardView.classList.add('hidden');
+                pilotoView.classList.remove('hidden');
+                sidebarFilters.style.display = 'none'; // Esconde filtros pois o Piloto tem filtros próprios
+            }
+        }
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // =========================================================
-        // CONFIGURAÇÃO DO FIREBASE (CORRETA)
-        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -242,13 +299,11 @@
             messagingSenderId: "208429748638",
             appId: "1:208429748638:web:9d5ee72514035221b3c68f"
         };
-        // =========================================================
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const dbRef = ref(db, 'dashboard_projetos_v1');
 
-        // --- LISTA DE PROJETOS (Recuperada do original) ---
         const projectList = [
             "MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", 
             "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", 
@@ -257,7 +312,6 @@
             "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"
         ];
         
-        // Inicializa os dropdowns de projetos IMEDIATAMENTE
         function initDropdowns() {
             const pSelects = [
                 document.getElementById('filter-projeto'), 
@@ -267,19 +321,16 @@
             
             pSelects.forEach(sel => {
                 if(!sel) return;
-                // Define opção padrão
                 if (sel.id === 'nome-projeto') {
                     sel.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
                 } else {
                     sel.innerHTML = '<option value="">Todos os Projetos</option>';
                 }
-                // Adiciona a lista
                 projectList.forEach(p => sel.add(new Option(p, p)));
             });
         }
-        initDropdowns(); // Chama a função agora
+        initDropdowns();
 
-        // Variáveis
         let allStoresData = []; 
         let allFlattenedData = [];
         let currentChartInstance = null; 
@@ -297,7 +348,6 @@
         ];
         const chartLabels = indicatorMonths.map(m => m.label);
 
-        // Elementos da Interface
         const els = {
             tableBody: document.getElementById('project-table-body'),
             toast: document.getElementById('toast'),
@@ -321,20 +371,18 @@
                 ge: document.getElementById('filter-ge'),
                 associado: document.getElementById('filter-associado'),
                 uf: document.getElementById('filter-uf'),
-                anjo: document.getElementById('filter-anjo'),
-                bandeira: document.getElementById('filter-bandeira'),
+                // anjo: document.getElementById('filter-anjo'), // Removido da sidebar no layout unificado para economizar espaço
+                // bandeira: document.getElementById('filter-bandeira'),
                 projeto: document.getElementById('filter-projeto'),
-                cnpj: document.getElementById('filter-cnpj'),
+                // cnpj: document.getElementById('filter-cnpj'),
                 loja: document.getElementById('filter-loja')
             }
         };
 
-        // --- CONEXÃO REALTIME ---
         onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
             processData();
-            // Aviso discreto de sucesso
             showToast("Sincronizado!", false, 1500);
         }, (error) => {
             console.error("Erro Firebase:", error);
@@ -348,7 +396,6 @@
             });
         }
 
-        // --- LÓGICA E PROCESSAMENTO ---
         function processData() {
             allFlattenedData = [];
             const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), anjos: new Set(), ufs: new Set(), bandeiras: new Set() };
@@ -379,6 +426,7 @@
 
         function populateFilters(sets) {
             const fill = (el, set) => {
+                if(!el) return;
                 const cur = el.value;
                 el.innerHTML = '<option value="">Todos</option>';
                 [...set].sort().forEach(v => v && el.add(new Option(v, v)));
@@ -386,9 +434,7 @@
             };
             fill(els.filters.analista, sets.analistas); fill(els.filters.ge, sets.ges);
             fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs);
-            fill(els.filters.anjo, sets.anjos); fill(els.filters.bandeira, sets.bandeiras);
             
-            // Filtro GE do Gráfico
             const chartGe = document.getElementById('chart-filter-ge');
             const curGe = chartGe.value;
             chartGe.innerHTML = '<option value="">Todos</option>';
@@ -401,17 +447,17 @@
             const f = els.filters;
             
             const filtered = allFlattenedData.filter(r => {
+                // Adaptação para o filtro de texto unificado
+                const textFilter = f.loja.value.toLowerCase();
+                const matchesText = !textFilter || r.nomeLoja.toLowerCase().includes(textFilter) || r.id.toLowerCase().includes(textFilter);
+
                 const matchesSearch = !s || r.nomeLoja.toLowerCase().includes(s) || r.id.toLowerCase().includes(s);
-                return matchesSearch &&
+                return matchesSearch && matchesText &&
                     (!f.analista.value || r.analista === f.analista.value) &&
                     (!f.ge.value || r.ge === f.ge.value) &&
                     (!f.associado.value || r.associado === f.associado.value) &&
                     (!f.uf.value || r.uf === f.uf.value) &&
-                    (!f.anjo.value || r.anjo === f.anjo.value) &&
-                    (!f.bandeira.value || r.bandeira === f.bandeira.value) &&
-                    (!f.projeto.value || r.projectName === f.projeto.value) &&
-                    (!f.cnpj.value || r.id.toLowerCase().includes(f.cnpj.value.toLowerCase())) &&
-                    (!f.loja.value || r.nomeLoja.toLowerCase().includes(f.loja.value.toLowerCase()));
+                    (!f.projeto.value || r.projectName === f.projeto.value);
             });
             renderTable(filtered);
         }
@@ -469,7 +515,6 @@
             els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
         }
 
-        // --- ATUALIZAÇÃO NO BANCO ---
         function updateGeneric(id, pName, fn) {
             const clone = JSON.parse(JSON.stringify(allStoresData));
             const idx = clone.findIndex(s => s && s.id === id);
@@ -505,7 +550,6 @@
             setTimeout(() => el.classList.remove('bg-green-100', 'border-green-500'), 1000);
         }
 
-        // --- MANIPULADORES DE MODAIS ---
         els.storeForm.addEventListener('submit', (e) => {
             e.preventDefault();
             document.getElementById('save-store-btn').disabled = true;
@@ -520,9 +564,9 @@
                 nomeLoja: data.get('nome-loja')
             };
 
-            if(document.getElementById('cnpj').readOnly) { // Edit Mode
+            if(document.getElementById('cnpj').readOnly) { 
                  if(idx > -1) clone[idx] = { ...clone[idx], ...common };
-            } else { // Create Mode
+            } else { 
                 const pName = data.get('nome-projeto');
                 if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); document.getElementById('save-store-btn').disabled=false; return; }
                 const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
@@ -541,7 +585,6 @@
             document.getElementById('save-store-btn').disabled = false;
         });
 
-        // --- KPI & HELPERS ---
         function calcKPIs() {
             const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
             allFlattenedData.forEach(r => {
@@ -564,7 +607,6 @@
             setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), duration);
         }
 
-        // --- EVENTOS GERAIS ---
         function openObs(e) {
             const {id, p} = e.currentTarget.dataset;
             const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
@@ -594,7 +636,10 @@
             const id = e.currentTarget.dataset.id;
             const d = allFlattenedData.find(r => r.id === id);
             if(!d) return;
-            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
+            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => {
+                const input = document.getElementsByName(f)[0];
+                if(input) input.value = d[f==='nome-loja'?'nomeLoja':f]||'';
+            });
             document.getElementById('cnpj').value = id; document.getElementById('cnpj').readOnly = true;
             document.getElementById('store-modal-title').textContent = "Editar Loja";
             document.getElementById('form-project-group').style.display = 'none';
@@ -656,13 +701,11 @@
              });
         });
 
-        // UTILITÁRIOS
         const show = (el) => el.classList.remove('hidden');
         const hide = (el) => el.classList.add('hidden');
-        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v.value]))));
-        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => els.filters[k].value = v); };
+        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v ? v.value : '']))));
+        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => { if(els.filters[k]) els.filters[k].value = v; }); };
         
-        // LISTENERS GLOBAIS
         document.getElementById('open-modal-btn').onclick = () => {
             els.storeForm.reset(); document.getElementById('cnpj').readOnly = false;
             document.getElementById('store-modal-title').textContent = "Nova Loja";
@@ -670,7 +713,6 @@
             document.getElementById('form-meta-group').style.display = 'block';
             document.getElementById('form-observation-group').style.display = 'block';
             document.getElementById('nome-projeto').required = true;
-            // Garante que o dropdown de projetos está populado ao abrir o modal
             initDropdowns();
             show(els.storeModal);
         };
@@ -678,12 +720,4 @@
         document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
         ['cancel-obs-btn','close-obs-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
         document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
-        document.getElementById('toggle-filter-btn').onclick = () => { els.sidebar.classList.toggle('-translate-x-full'); els.mainContent.classList.toggle('md:ml-72'); };
-        document.getElementById('apply-filters-btn').onclick = () => { saveFilters(); applyFilters(); };
-        document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
-        els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
-        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
-
-    </script>
-</body>
-</html>
+        document.getElementById('toggle-
