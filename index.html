@@ -784,6 +784,11 @@
         const STATUS_MAP = { 'low_priority': 'BAIXA PRIORIDADE', 'priority_todo': 'A FAZER', 'priority_doing': 'TRABALHANDO', 'priority_done': 'FINALIZADO' };
         const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done' };
 
+        const initialDataRaw = [
+          { id: 1, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - MATRIZ", ge: "13", cnpj: "36.728.431/0001-16", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: true, delivery: false, inspire: false, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 2, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 02", ge: "13", cnpj: "36.728.431/0002-05", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } }
+        ];
+
         // Componentes Auxiliares
         const ProjectBadge = ({ status, label, onClick }) => {
           let bgColor = "", icon = null;
@@ -845,13 +850,21 @@
           const [selectedProject, setSelectedProject] = React.useState('mix');
           const fileInputRef = React.useRef(null);
 
-          // Carregar dados iniciais (simulado para este exemplo, mas pronto para integração)
+          // Carregar dados iniciais
           React.useEffect(() => {
             const savedData = localStorage.getItem('contingencyDataV4');
             if (savedData) { setAssociados(JSON.parse(savedData)); } 
             else {
-                // Dados Iniciais Omitidos por brevidade (já estão no seu código original)
-                setAssociados([]); 
+                const processedData = initialDataRaw.map(item => {
+                  const newProjetos = {};
+                  Object.keys(item.projetos).forEach(key => {
+                    const val = item.projetos[key];
+                    if (val === true || val === 'pending') newProjetos[key] = 'priority_todo';
+                    else newProjetos[key] = 'low_priority';
+                  });
+                  return { ...item, projetos: newProjetos };
+                });
+                setAssociados(processedData);
             }
           }, []);
           
@@ -871,9 +884,55 @@
               setIsModalOpen(false);
           };
 
-          const handleExportXLSX = () => { /* Lógica de Exportação mantida */ alert('Exportar XLSX (Implementação original mantida)'); };
+          const handleExportXLSX = () => {
+              const exportData = associados.map(item => {
+                  const row = { CNPJ: item.cnpj || '', GE: item.ge || '', ASSOCIADO: item.associado || '', "NOME LOJA": item.loja || '' };
+                  EXCEL_COLUMNS.slice(4).forEach(col => { row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE'; });
+                  return row;
+              });
+              const wb = XLSX.utils.book_new();
+              const ws = XLSX.utils.json_to_sheet(exportData);
+              const wscols = Object.keys(exportData[0]).map(k => ({ wch: k.length + 5 }));
+              ws['!cols'] = wscols;
+              XLSX.utils.book_append_sheet(wb, ws, "Contingencia");
+              XLSX.writeFile(wb, "Modelo_Contingencia_CO.xlsx");
+          };
+
           const handleImportClick = () => fileInputRef.current.click();
-          const handleFileChange = (e) => { /* Lógica de Importação mantida */ alert('Importar XLSX (Implementação original mantida)'); };
+          const handleFileChange = (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                  const bstr = evt.target.result;
+                  const wb = XLSX.read(bstr, { type: 'binary' });
+                  const ws = wb.Sheets[wb.SheetNames[0]];
+                  const data = XLSX.utils.sheet_to_json(ws);
+                  if (data.length > 0) {
+                      let currentId = Math.max(...associados.map(a => a.id), 0) + 1;
+                      const newEntries = data.map(row => {
+                          const projetos = {};
+                          Object.keys(projectLabels).forEach(key => {
+                              const label = EXCEL_COLUMNS.find(c => c.key === key)?.label;
+                              const val = row[label] ? row[label].toString().toUpperCase().trim() : '';
+                              projetos[key] = STATUS_MAP_REVERSE[val] || 'low_priority';
+                          });
+                          return {
+                              id: currentId++,
+                              associado: row['ASSOCIADO'] || '',
+                              loja: row['NOME LOJA'] || '',
+                              ge: row['GE'] ? row['GE'].toString() : '',
+                              cnpj: row['CNPJ'] ? row['CNPJ'].toString() : '',
+                              projetos
+                          };
+                      });
+                      setAssociados(prev => [...prev, ...newEntries]);
+                      alert(`${newEntries.length} lojas importadas com sucesso!`);
+                  }
+              };
+              reader.readAsBinaryString(file);
+              e.target.value = null;
+          };
 
           const togglePriorityStatus = (id, projectKey) => {
             setAssociados(prev => prev.map(item => {
@@ -907,7 +966,7 @@
           const todoList = associados.filter(a => a.projetos[selectedProject] === 'priority_todo');
           const doingList = associados.filter(a => a.projetos[selectedProject] === 'priority_doing');
           const doneList = associados.filter(a => a.projetos[selectedProject] === 'priority_done');
-          const pilotStores = associados.slice(0, 5); // Exemplo
+          const pilotStores = associados.slice(0, 5); 
 
           return (
             <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
@@ -983,4 +1042,7 @@
                               </div>
                               <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-6">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-
+                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-[#FF5510] group-hover:text-white transition-colors">{item.associado.charAt(0)}</div>
+                                  <div>
+                                      <h4 className="font-bold text-slate-800 text-lg group-hover:text-[#FF5510] transition-colors">{item.associado}</h4>
+                                      <div className="flex items-center gap-2 text-sm
