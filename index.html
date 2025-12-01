@@ -3,62 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmarcas - Sistema Integrado Online</title>
+    <title>Dashboard de Projetos - Farmarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS GERAIS --- */
-        body { background-color: #f3f4f6; margin: 0; padding: 0; }
+        body { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
         
-        .main-nav {
-            background-color: #111827;
-            color: white;
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-        
-        .nav-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: #d1d5db;
-        }
-        .nav-btn:hover { background-color: #374151; color: white; }
-        .nav-btn.active {
-            background-color: #FF5510;
-            color: white;
-            border-color: #FF5510;
-            box-shadow: 0 0 10px rgba(255, 85, 16, 0.3);
-        }
-
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-
-        /* --- ESTILOS ESPECÍFICOS DASHBOARD 1 --- */
-        .dash1-root { font-family: 'Rubik', sans-serif; }
+        /* Estilos personalizados */
         .status-select {
             padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
             appearance: none; -webkit-appearance: none;
@@ -69,133 +25,214 @@
         .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
         .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
         .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        
         .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
         .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
+        
         .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         #toast { transition: transform 0.3s, opacity 0.3s; }
         .obs-filled { color: #3b82f6; }
-
-        /* --- ESTILOS ESPECÍFICOS DASHBOARD 2 --- */
-        #react-root { font-family: 'Inter', sans-serif; }
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100">
 
-    <nav class="main-nav">
-        <div class="flex items-center gap-3">
-            <div class="bg-white p-1.5 rounded-lg"><i class="fa-solid fa-chart-pie text-[#FF5510] fa-lg"></i></div>
-            <span class="text-lg font-bold tracking-wide">Portal Farmarcas</span>
+    <aside id="filter-sidebar" class="fixed top-0 left-0 z-30 w-72 h-screen bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
+        <p class="text-xs text-gray-500 mb-4">Filtros de Analista, GE, etc. aparecerão conforme você cadastrar lojas.</p>
+        <div class="space-y-4 overflow-y-auto h-[calc(100vh-160px)] pr-2">
+            <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            
+            <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            
+            <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar CNPJ"></div>
+            <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar Loja"></div>
         </div>
-        <div class="flex gap-3">
-            <button id="btn-view-1" class="nav-btn active" onclick="switchView('view-1')">
-                <i class="fa-solid fa-table-list mr-2"></i>Dashboard Projetos
-            </button>
-            <button id="btn-view-2" class="nav-btn" onclick="switchView('view-2')">
-                <i class="fa-solid fa-rocket mr-2"></i>Painel Piloto
-            </button>
+        <div class="absolute bottom-6 left-6 right-6 space-y-3">
+            <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
+            <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar Filtros</button>
         </div>
-    </nav>
+    </aside>
 
-    <div id="view-1" class="view-section active dash1-root">
-        <aside id="filter-sidebar" class="fixed top-[72px] left-0 z-30 w-72 h-[calc(100vh-72px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-            <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
-            <div class="space-y-4 overflow-y-auto h-[calc(100vh-200px)] pr-2">
-                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Loja/CNPJ</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Buscar..."></div>
-            </div>
-            <div class="absolute bottom-6 left-6 right-6 space-y-3">
-                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar</button>
-                <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar</button>
-            </div>
-        </aside>
-
-        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-sm font-medium text-gray-500 uppercase">Total Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-sm font-medium text-gray-500 uppercase">Assoc. Pend.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p></div>
-            </div>
-
-            <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
-                <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-extrabold text-gray-800">Evolução Consolidada</h2><button id="toggle-filter-btn" class="md:hidden text-gray-600"><i class="fa-solid fa-filter"></i></button></div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-                    <div><label class="text-xs text-gray-500">Projeto</label><select id="chart-filter-project" class="w-full rounded border-gray-300"></select></div>
-                    <div><label class="text-xs text-gray-500">GE</label><select id="chart-filter-ge" class="w-full rounded border-gray-300"><option value="">Todos</option></select></div>
-                    <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 rounded font-semibold hover:bg-[#E04A0E]">Gerar</button>
+    <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
+        <header class="mb-6">
+            <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
+                <div class="flex items-center">
+                    <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
+                    <h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard Online</h1>
                 </div>
-                <div class="relative h-72"><canvas id="consolidated-chart"></canvas></div>
-            </section>
-
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div class="p-4 border-b flex justify-between items-center">
-                    <input type="text" id="search-input" placeholder="Pesquisar tabela..." class="pl-4 pr-4 py-2 rounded-lg border border-gray-300 w-64">
-                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded hover:bg-[#E04A0E] text-sm font-bold"><i class="fa-solid fa-plus mr-2"></i>Nova Loja</button>
+                <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow">
+                    <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                </button>
+            </nav>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p>
                 </div>
-                <div class="overflow-x-auto max-h-[500px]">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 sticky-header">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">Loja</th>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">CNPJ</th>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">Projeto</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Status</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Meta</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ago/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Set/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Out/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">...</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="10" class="text-center p-8 text-gray-500">Carregando Firebase...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p>
                 </div>
             </div>
-        </main>
-    </div>
+        </header>
 
-    <div id="view-2" class="view-section">
-        <div id="react-root"></div>
-    </div>
+        <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="">Todos</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="CNPJ ou Loja"></div>
+                <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full">Gerar Gráfico</button>
+            </div>
+            <div class="relative h-96"><canvas id="consolidated-chart"></canvas></div>
+        </section>
+
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-4 border-b">
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]">
+                </div>
+            </div>
+            <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky-header">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                        <tr><td colspan="29" class="text-center p-8 text-gray-500">Banco de dados conectado. Adicione uma loja para começar!</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
     <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
-    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b flex justify-between"><h2 id="store-modal-title" class="font-bold text-lg">Dados Loja</h2><button id="close-modal-btn"><i class="fa-solid fa-times"></i></button></div>
-            <form id="store-form" class="p-6 overflow-y-auto space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" name="nome-loja" placeholder="Nome Loja" required class="border p-2 rounded">
-                    <input type="text" id="cnpj" name="cnpj" placeholder="CNPJ" required class="border p-2 rounded">
-                    <input type="text" name="ge" placeholder="GE" class="border p-2 rounded">
-                    <input type="text" name="analista" placeholder="Analista" class="border p-2 rounded">
-                    <input type="text" name="associado" placeholder="Associado" class="border p-2 rounded">
-                    <input type="text" name="uf" placeholder="UF" class="border p-2 rounded">
+
+    <div id="store-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800"><i class="fa-solid fa-times fa-lg"></i></button>
+            </header>
+            <form id="store-form" class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Analista</label><input type="text" id="analista" name="analista" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">GE</label><input type="text" id="ge" name="ge" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Associado</label><input type="text" id="associado" name="associado" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        
+                        <div id="form-project-group">
+                            <label class="block text-sm font-medium">Projeto</label>
+                            <select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm">
+                                <option value="" disabled selected>Carregando projetos...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></textarea></div>
+                    </div>
                 </div>
-                <div id="create-only-fields" class="space-y-4 border-t pt-4">
-                    <select id="nome-projeto" name="nome-projeto" class="w-full border p-2 rounded"><option value="">Selecione Projeto</option></select>
-                    <input type="number" name="meta" placeholder="Meta" class="w-full border p-2 rounded">
-                    <textarea name="observation" placeholder="Obs" class="w-full border p-2 rounded"></textarea>
-                </div>
-                <button type="submit" id="save-store-btn" class="w-full bg-[#FF5510] text-white py-2 rounded font-bold">Salvar</button>
             </form>
+            <footer class="flex justify-end p-5 border-t bg-gray-50">
+                <button id="cancel-modal-btn" class="bg-gray-200 text-gray-700 py-2 px-5 rounded mr-3">Cancelar</button>
+                <button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white py-2 px-5 rounded shadow">Salvar</button>
+            </footer>
         </div>
     </div>
-    
-    <div id="chart-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-4 rounded w-3/4"><canvas id="indicator-chart"></canvas><button id="close-chart-modal-btn" class="mt-4 bg-gray-200 p-2 rounded">Fechar</button></div></div>
-    <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-6 rounded"><p>Confirmar exclusão?</p><div class="flex gap-2 mt-4"><button id="confirm-delete-btn" class="bg-red-500 text-white p-2 rounded">Sim</button><button id="cancel-delete-btn" class="bg-gray-200 p-2 rounded">Não</button></div></div></div>
+
+    <div id="chart-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2>
+                <button id="close-chart-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button>
+            </header>
+            <div class="p-6">
+                <div class="mb-4 flex justify-center space-x-6">
+                    <label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label>
+                    <label><input type="radio" name="chart-format" value="currency" class="mr-2">Moeda</label>
+                    <label><input type="radio" name="chart-format" value="percent" class="mr-2">%</label>
+                </div>
+                <canvas id="indicator-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="obs-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <header class="flex justify-between items-center p-5 border-b"><h2 id="obs-modal-title" class="font-bold">Obs</h2></header>
+            <div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div>
+            <footer class="flex justify-end p-5 border-t"><button id="cancel-obs-btn" class="bg-gray-200 px-4 py-2 rounded mr-2">Cancelar</button><button id="save-obs-btn" class="bg-[#FF5510] text-white px-4 py-2 rounded">Salvar</button></footer>
+        </div>
+    </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4">Excluir?</h2>
+            <p id="delete-modal-text" class="mb-6">Tem certeza?</p>
+            <div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- 1. CONFIGURAÇÃO FIREBASE ---
+        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE (CORRETA)
+        // =========================================================
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -205,264 +242,448 @@
             messagingSenderId: "208429748638",
             appId: "1:208429748638:web:9d5ee72514035221b3c68f"
         };
+        // =========================================================
 
-        // Inicializa e EXPORTA para o window (para o React usar)
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
-        // "Ponte" para o React acessar o Firebase
-        window.firebaseDB = db;
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
-        window.firebaseOnValue = onValue;
+        const dbRef = ref(db, 'dashboard_projetos_v1');
 
-        // --- 2. LÓGICA DASHBOARD 1 (VANILLA JS) ---
-        const dbRef1 = ref(db, 'dashboard_projetos_v1');
-        let allStoresData = [];
+        // --- LISTA DE PROJETOS (Recuperada do original) ---
+        const projectList = [
+            "MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", 
+            "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", 
+            "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", 
+            "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", 
+            "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"
+        ];
+        
+        // Inicializa os dropdowns de projetos IMEDIATAMENTE
+        function initDropdowns() {
+            const pSelects = [
+                document.getElementById('filter-projeto'), 
+                document.getElementById('chart-filter-project'), 
+                document.getElementById('nome-projeto')
+            ];
+            
+            pSelects.forEach(sel => {
+                if(!sel) return;
+                // Define opção padrão
+                if (sel.id === 'nome-projeto') {
+                    sel.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
+                } else {
+                    sel.innerHTML = '<option value="">Todos os Projetos</option>';
+                }
+                // Adiciona a lista
+                projectList.forEach(p => sel.add(new Option(p, p)));
+            });
+        }
+        initDropdowns(); // Chama a função agora
+
+        // Variáveis
+        let allStoresData = []; 
         let allFlattenedData = [];
-        
-        const projectList = ["MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"];
-        const indicatorMonths = [{ id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' }, { id: 'nov2025', label: 'Nov/25' }]; // Simplificado
+        let currentChartInstance = null; 
+        let consolidatedChartInstance = null;
+        let currentChartRowData = null;
 
-        // Carrega Projetos no Select
-        const projSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
-        projSelects.forEach(s => {
-            if(s) {
-                s.innerHTML = s.id.includes('filter') ? '<option value="">Todos</option>' : '<option value="" disabled selected>Selecione</option>';
-                projectList.forEach(p => s.add(new Option(p, p)));
+        const statusList = [{val:'pendente', txt:'Pendente', cls:'status-pendente'}, {val:'andamento', txt:'Em Andamento', cls:'status-andamento'}, {val:'pendente-associa', txt:'Pendente Assoc.', cls:'status-pendente-associa'}, {val:'finalizado', txt:'Finalizado', cls:'status-finalizado'}];
+        const indicatorMonths = [
+            { id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' },
+            { id: 'nov2025', label: 'Nov/25' }, { id: 'dec2025', label: 'Dez/25' }, { id: 'jan2026', label: 'Jan/26' },
+            { id: 'feb2026', label: 'Fev/26' }, { id: 'mar2026', label: 'Mar/26' }, { id: 'apr2026', label: 'Abr/26' },
+            { id: 'may2026', label: 'Mai/26' }, { id: 'jun2026', label: 'Jun/26' }, { id: 'jul2026', label: 'Jul/26' },
+            { id: 'aug2026', label: 'Ago/26' }, { id: 'sep2026', label: 'Set/26' }, { id: 'oct2026', label: 'Out/26' },
+            { id: 'nov2026', label: 'Nov/26' }, { id: 'dec2026', label: 'Dez/26' }
+        ];
+        const chartLabels = indicatorMonths.map(m => m.label);
+
+        // Elementos da Interface
+        const els = {
+            tableBody: document.getElementById('project-table-body'),
+            toast: document.getElementById('toast'),
+            storeModal: document.getElementById('store-modal'),
+            storeForm: document.getElementById('store-form'),
+            chartModal: document.getElementById('chart-modal'),
+            obsModal: document.getElementById('obs-modal'),
+            deleteModal: document.getElementById('delete-confirm-modal'),
+            sidebar: document.getElementById('filter-sidebar'),
+            mainContent: document.getElementById('main-content'),
+            searchInput: document.getElementById('search-input'),
+            kpis: {
+                total: document.getElementById('kpi-total-lojas'),
+                pendente: document.getElementById('kpi-projetos-pendentes'),
+                associa: document.getElementById('kpi-projetos-pendentes-associa'),
+                finalizado: document.getElementById('kpi-projetos-finalizados'),
+                andamento: document.getElementById('kpi-em-andamento')
+            },
+            filters: {
+                analista: document.getElementById('filter-analista'),
+                ge: document.getElementById('filter-ge'),
+                associado: document.getElementById('filter-associado'),
+                uf: document.getElementById('filter-uf'),
+                anjo: document.getElementById('filter-anjo'),
+                bandeira: document.getElementById('filter-bandeira'),
+                projeto: document.getElementById('filter-projeto'),
+                cnpj: document.getElementById('filter-cnpj'),
+                loja: document.getElementById('filter-loja')
             }
-        });
+        };
 
-        // Sync Dashboard 1
-        onValue(dbRef1, (snapshot) => {
+        // --- CONEXÃO REALTIME ---
+        onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-            processDataV1();
+            processData();
+            // Aviso discreto de sucesso
+            showToast("Sincronizado!", false, 1500);
+        }, (error) => {
+            console.error("Erro Firebase:", error);
+            showToast("Erro: Permissão negada ou Banco inexistente!", true, 5000);
         });
 
-        function processDataV1() {
-            allFlattenedData = [];
-            allStoresData.forEach(store => {
-                if(!store || !store.projects) return;
-                Object.keys(store.projects).forEach(pName => {
-                    allFlattenedData.push({ ...store, projectName: pName, ...store.projects[pName] });
-                });
+        function saveToFirebase(newData) {
+            set(dbRef, newData).catch(err => {
+                console.error(err);
+                showToast("Erro ao salvar dados!", true);
             });
-            renderTableV1(allFlattenedData);
-            updateKPIsV1();
         }
 
-        function renderTableV1(data) {
-            const tbody = document.getElementById('project-table-body');
-            tbody.innerHTML = '';
-            if(!data.length) { tbody.innerHTML = '<tr><td colspan="10" class="p-4 text-center">Nenhum dado.</td></tr>'; return; }
+        // --- LÓGICA E PROCESSAMENTO ---
+        function processData() {
+            allFlattenedData = [];
+            const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), anjos: new Set(), ufs: new Set(), bandeiras: new Set() };
             
-            data.forEach(row => {
+            allStoresData.forEach(store => {
+                if(!store) return;
+                if(store.analista) sets.analistas.add(store.analista);
+                if(store.ge) sets.ges.add(store.ge);
+                if(store.associado) sets.associados.add(store.associado);
+                if(store.anjo) sets.anjos.add(store.anjo);
+                if(store.uf) sets.ufs.add(store.uf);
+                if(store.bandeira) sets.bandeiras.add(store.bandeira);
+
+                if(store.projects) {
+                    Object.keys(store.projects).forEach(pName => {
+                        const p = store.projects[pName];
+                        allFlattenedData.push({ ...store, projectName: pName, ...p, projects: undefined });
+                    });
+                }
+            });
+            
+            allFlattenedData.sort((a,b) => a.nomeLoja.localeCompare(b.nomeLoja));
+            populateFilters(sets);
+            loadFilters();
+            applyFilters();
+            calcKPIs();
+        }
+
+        function populateFilters(sets) {
+            const fill = (el, set) => {
+                const cur = el.value;
+                el.innerHTML = '<option value="">Todos</option>';
+                [...set].sort().forEach(v => v && el.add(new Option(v, v)));
+                el.value = cur;
+            };
+            fill(els.filters.analista, sets.analistas); fill(els.filters.ge, sets.ges);
+            fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs);
+            fill(els.filters.anjo, sets.anjos); fill(els.filters.bandeira, sets.bandeiras);
+            
+            // Filtro GE do Gráfico
+            const chartGe = document.getElementById('chart-filter-ge');
+            const curGe = chartGe.value;
+            chartGe.innerHTML = '<option value="">Todos</option>';
+            [...sets.ges].sort().forEach(v => v && chartGe.add(new Option(v, v)));
+            chartGe.value = curGe;
+        }
+
+        function applyFilters() {
+            const s = els.searchInput.value.toLowerCase();
+            const f = els.filters;
+            
+            const filtered = allFlattenedData.filter(r => {
+                const matchesSearch = !s || r.nomeLoja.toLowerCase().includes(s) || r.id.toLowerCase().includes(s);
+                return matchesSearch &&
+                    (!f.analista.value || r.analista === f.analista.value) &&
+                    (!f.ge.value || r.ge === f.ge.value) &&
+                    (!f.associado.value || r.associado === f.associado.value) &&
+                    (!f.uf.value || r.uf === f.uf.value) &&
+                    (!f.anjo.value || r.anjo === f.anjo.value) &&
+                    (!f.bandeira.value || r.bandeira === f.bandeira.value) &&
+                    (!f.projeto.value || r.projectName === f.projeto.value) &&
+                    (!f.cnpj.value || r.id.toLowerCase().includes(f.cnpj.value.toLowerCase())) &&
+                    (!f.loja.value || r.nomeLoja.toLowerCase().includes(f.loja.value.toLowerCase()));
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            els.tableBody.innerHTML = '';
+            if(!data.length) { 
+                if(allFlattenedData.length === 0) {
+                    els.tableBody.innerHTML = '<tr><td colspan="29" class="p-8 text-center text-gray-500">Banco de dados vazio. Clique em "Inserir Loja" para começar!</td></tr>';
+                } else {
+                    els.tableBody.innerHTML = '<tr><td colspan="29" class="p-8 text-center text-gray-500">Nenhum projeto encontrado com estes filtros.</td></tr>'; 
+                }
+                return; 
+            }
+
+            data.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                
+                const statusOpts = statusList.map(s => `<option value="${s.val}" ${r.status===s.val?'selected':''}>${s.txt}</option>`).join('');
+                const statusClass = statusList.find(s=>s.val===r.status)?.cls || 'status-default';
+                const obsClass = (r.observation && r.observation.trim()) ? 'obs-filled' : 'text-gray-400';
+                
+                const inputs = indicatorMonths.map(m => 
+                    `<td class="px-2 py-2 text-center"><input type="number" class="indicator-input-table" value="${r.indicators?.[m.id]||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}" data-m="${m.id}"></td>`
+                ).join('');
+
                 tr.innerHTML = `
-                    <td class="px-4 py-2 font-medium">${row.nomeLoja}</td>
-                    <td class="px-4 py-2 text-xs text-gray-500">${row.id}</td>
-                    <td class="px-4 py-2 font-bold text-xs">${row.projectName}</td>
-                    <td class="px-4 py-2 text-center text-xs bg-gray-100 rounded">${row.status}</td>
-                    <td class="px-4 py-2 text-center text-xs">${row.goal || '-'}</td>
-                    ${indicatorMonths.map(m => `<td class="px-2 text-center text-xs">${row.indicators?.[m.id] || '-'}</td>`).join('')}
-                    <td class="px-4 py-2 text-center">...</td>
-                    <td class="px-4 py-2 text-center">
-                        <button class="text-red-500 hover:text-red-700" onclick="alert('Funcionalidade completa no código anterior')"><i class="fa-solid fa-trash"></i></button>
+                    <td class="px-4 py-3 font-medium whitespace-nowrap">${r.nomeLoja}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">${r.id}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">${r.analista||'-'}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">${r.ge||'-'}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">${r.associado||'-'}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">${r.bandeira||'-'}</td>
+                    <td class="px-4 py-3 font-bold text-gray-800 text-xs">${r.projectName}</td>
+                    <td class="px-4 py-3 text-center"><select class="status-select ${statusClass} text-xs" data-id="${r.id}" data-p="${r.projectName}">${statusOpts}</select></td>
+                    <td class="px-4 py-2 text-center"><input type="number" class="indicator-input-table meta-input" value="${r.goal||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}"></td>
+                    ${inputs}
+                    <td class="px-4 py-3 text-center"><button class="view-obs-btn ${obsClass}" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-note-sticky"></i></button></td>
+                    <td class="px-4 py-3 text-center flex gap-2 justify-center">
+                        <button class="edit-btn text-blue-500" data-id="${r.id}"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="chart-btn text-[#FF5510]" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-chart-line"></i></button>
+                        <button class="del-btn text-red-500" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
-                tbody.appendChild(tr);
+                els.tableBody.appendChild(tr);
+            });
+
+            els.tableBody.querySelectorAll('select').forEach(el => el.addEventListener('change', updateStatus));
+            els.tableBody.querySelectorAll('.indicator-input-table:not(.meta-input)').forEach(el => el.addEventListener('change', updateIndicator)); 
+            els.tableBody.querySelectorAll('.meta-input').forEach(el => el.addEventListener('change', updateMeta));
+            els.tableBody.querySelectorAll('.view-obs-btn').forEach(el => el.addEventListener('click', openObs));
+            els.tableBody.querySelectorAll('.chart-btn').forEach(el => el.addEventListener('click', openChart));
+            els.tableBody.querySelectorAll('.del-btn').forEach(el => el.addEventListener('click', confirmDel));
+            els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
+        }
+
+        // --- ATUALIZAÇÃO NO BANCO ---
+        function updateGeneric(id, pName, fn) {
+            const clone = JSON.parse(JSON.stringify(allStoresData));
+            const idx = clone.findIndex(s => s && s.id === id);
+            if(idx > -1 && clone[idx].projects[pName]) {
+                fn(clone[idx].projects[pName]);
+                saveToFirebase(clone);
+            }
+        }
+
+        function updateStatus(e) {
+            const el = e.target;
+            updateGeneric(el.dataset.id, el.dataset.p, (proj) => proj.status = el.value);
+            el.className = `status-select ${statusList.find(s=>s.val===el.value)?.cls||'status-default'} text-xs`;
+        }
+
+        function updateIndicator(e) {
+            const el = e.target;
+            updateGeneric(el.dataset.id, el.dataset.p, (proj) => {
+                if(!proj.indicators) proj.indicators = {};
+                proj.indicators[el.dataset.m] = el.value;
+            });
+            flash(el);
+        }
+
+        function updateMeta(e) {
+            const el = e.target;
+            updateGeneric(el.dataset.id, el.dataset.p, (proj) => proj.goal = el.value);
+            flash(el);
+        }
+
+        function flash(el) {
+            el.classList.add('bg-green-100', 'border-green-500');
+            setTimeout(() => el.classList.remove('bg-green-100', 'border-green-500'), 1000);
+        }
+
+        // --- MANIPULADORES DE MODAIS ---
+        els.storeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('save-store-btn').disabled = true;
+            const data = new FormData(els.storeForm);
+            const id = data.get('cnpj');
+            const clone = JSON.parse(JSON.stringify(allStoresData));
+            let idx = clone.findIndex(s => s && s.id === id);
+            
+            const common = {
+                analista: data.get('analista'), anjo: data.get('anjo'), uf: data.get('uf'),
+                bandeira: data.get('bandeira'), ge: data.get('ge'), associado: data.get('associado'),
+                nomeLoja: data.get('nome-loja')
+            };
+
+            if(document.getElementById('cnpj').readOnly) { // Edit Mode
+                 if(idx > -1) clone[idx] = { ...clone[idx], ...common };
+            } else { // Create Mode
+                const pName = data.get('nome-projeto');
+                if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); document.getElementById('save-store-btn').disabled=false; return; }
+                const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
+                indicatorMonths.forEach(m => newProj.indicators[m.id] = '');
+                
+                if(idx > -1) {
+                    clone[idx] = { ...clone[idx], ...common };
+                    if(!clone[idx].projects) clone[idx].projects = {};
+                    clone[idx].projects[pName] = newProj;
+                } else {
+                    clone.push({ ...common, id: id, projects: { [pName]: newProj } });
+                }
+            }
+            saveToFirebase(clone);
+            hide(els.storeModal);
+            document.getElementById('save-store-btn').disabled = false;
+        });
+
+        // --- KPI & HELPERS ---
+        function calcKPIs() {
+            const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
+            allFlattenedData.forEach(r => {
+                k.total.add(r.id);
+                if(r.status === 'pendente') k.pend++;
+                else if(r.status === 'pendente-associa') k.assoc++;
+                else if(r.status === 'finalizado') k.fin++;
+                else if(r.status === 'andamento') k.and++;
+            });
+            els.kpis.total.textContent = k.total.size;
+            els.kpis.pendente.textContent = k.pend;
+            els.kpis.associa.textContent = k.assoc;
+            els.kpis.finalizado.textContent = k.fin;
+            els.kpis.andamento.textContent = k.and;
+        }
+
+        function showToast(msg, err, duration=3000) {
+            els.toast.textContent = msg;
+            els.toast.className = `fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg z-50 transform transition-all duration-300 ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`;
+            setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), duration);
+        }
+
+        // --- EVENTOS GERAIS ---
+        function openObs(e) {
+            const {id, p} = e.currentTarget.dataset;
+            const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            document.getElementById('obs-modal-textarea').value = row?.observation || '';
+            document.getElementById('save-obs-btn').onclick = () => {
+                updateGeneric(id, p, (pr) => pr.observation = document.getElementById('obs-modal-textarea').value);
+                hide(els.obsModal);
+            };
+            show(els.obsModal);
+        }
+
+        function confirmDel(e) {
+            const {id, p} = e.currentTarget.dataset;
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                const clone = JSON.parse(JSON.stringify(allStoresData));
+                const idx = clone.findIndex(s => s && s.id === id);
+                if(idx > -1) {
+                    delete clone[idx].projects[p];
+                    saveToFirebase(clone);
+                }
+                hide(els.deleteModal);
+            };
+            show(els.deleteModal);
+        }
+
+        function editStore(e) {
+            const id = e.currentTarget.dataset.id;
+            const d = allFlattenedData.find(r => r.id === id);
+            if(!d) return;
+            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
+            document.getElementById('cnpj').value = id; document.getElementById('cnpj').readOnly = true;
+            document.getElementById('store-modal-title').textContent = "Editar Loja";
+            document.getElementById('form-project-group').style.display = 'none';
+            document.getElementById('form-meta-group').style.display = 'none';
+            document.getElementById('form-observation-group').style.display = 'none';
+            document.getElementById('nome-projeto').required = false;
+            show(els.storeModal);
+        }
+
+        function openChart(e) {
+            const {id, p} = e.currentTarget.dataset;
+            currentChartRowData = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            renderChart('number');
+            show(els.chartModal);
+        }
+
+        function renderChart(fmt) {
+            if(!currentChartRowData) return;
+            const ctx = document.getElementById('indicator-chart').getContext('2d');
+            if(currentChartInstance) currentChartInstance.destroy();
+            const data = indicatorMonths.map(m => Number(currentChartRowData.indicators?.[m.id]) || 0);
+            const goal = Number(currentChartRowData.goal) || 0;
+            
+            currentChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: chartLabels, datasets: [{ label: 'Realizado', data, borderColor: '#FF5510', backgroundColor: 'rgba(255,85,16,0.1)', fill: true, tension: 0.1 }] },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { 
+                        annotation: { annotations: { line1: { type: 'line', yMin: goal, yMax: goal, borderColor: 'red', borderWidth: 2, borderDash: [5,5], label: { enabled: true, content: 'Meta: '+goal } } } }
+                    }
+                }
             });
         }
-
-        function updateKPIsV1() {
-            document.getElementById('kpi-total-lojas').textContent = new Set(allFlattenedData.map(r=>r.id)).size;
-            document.getElementById('kpi-projetos-pendentes').textContent = allFlattenedData.filter(r=>r.status === 'pendente').length;
-        }
-
-        // Funções de Modal (Simplificadas para funcionar no merge)
-        const show = (id) => document.getElementById(id).classList.remove('hidden');
-        const hide = (id) => document.getElementById(id).classList.add('hidden');
         
-        document.getElementById('open-modal-btn').onclick = () => { document.getElementById('store-form').reset(); show('store-modal'); };
-        document.getElementById('close-modal-btn').onclick = () => hide('store-modal');
-        
-        document.getElementById('store-form').onsubmit = (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            const id = fd.get('cnpj');
-            const pName = fd.get('nome-projeto');
-            
-            // Lógica de Salvar no Firebase V1
-            let stores = JSON.parse(JSON.stringify(allStoresData));
-            let idx = stores.findIndex(s => s && s.id === id);
-            
-            const newStore = { 
-                id, nomeLoja: fd.get('nome-loja'), ge: fd.get('ge'), 
-                analista: fd.get('analista'), associado: fd.get('associado') 
-            };
-            const newProj = { status: 'pendente', goal: fd.get('meta'), indicators: {} };
+        document.getElementById('generate-chart-btn').addEventListener('click', () => {
+             const proj = document.getElementById('chart-filter-project').value;
+             const ge = document.getElementById('chart-filter-ge').value;
+             const term = document.getElementById('chart-filter-cnpj-loja').value.toLowerCase();
+             if(!proj) { showToast("Selecione um projeto", true); return; }
 
-            if(idx > -1) {
-                stores[idx] = { ...stores[idx], ...newStore };
-                if(!stores[idx].projects) stores[idx].projects = {};
-                stores[idx].projects[pName] = newProj;
-            } else {
-                stores.push({ ...newStore, projects: { [pName]: newProj } });
-            }
-            
-            set(dbRef1, stores);
-            hide('store-modal');
-            alert('Salvo no Firebase!');
+             const rows = allFlattenedData.filter(r => r.projectName === proj && (!ge || r.ge === ge) && (!term || r.nomeLoja.toLowerCase().includes(term) || r.id.includes(term)));
+             const ctx = document.getElementById('consolidated-chart').getContext('2d');
+             if(consolidatedChartInstance) consolidatedChartInstance.destroy();
+             
+             consolidatedChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: rows.map(r => ({
+                        label: r.nomeLoja,
+                        data: indicatorMonths.map(m => Number(r.indicators?.[m.id])||0),
+                        borderColor: '#'+Math.floor(Math.random()*16777215).toString(16),
+                        tension: 0.1, fill: false
+                    }))
+                },
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+             });
+        });
+
+        // UTILITÁRIOS
+        const show = (el) => el.classList.remove('hidden');
+        const hide = (el) => el.classList.add('hidden');
+        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v.value]))));
+        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => els.filters[k].value = v); };
+        
+        // LISTENERS GLOBAIS
+        document.getElementById('open-modal-btn').onclick = () => {
+            els.storeForm.reset(); document.getElementById('cnpj').readOnly = false;
+            document.getElementById('store-modal-title').textContent = "Nova Loja";
+            document.getElementById('form-project-group').style.display = 'block';
+            document.getElementById('form-meta-group').style.display = 'block';
+            document.getElementById('form-observation-group').style.display = 'block';
+            document.getElementById('nome-projeto').required = true;
+            // Garante que o dropdown de projetos está populado ao abrir o modal
+            initDropdowns();
+            show(els.storeModal);
         };
+        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.storeModal));
+        document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
+        ['cancel-obs-btn','close-obs-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
+        document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
+        document.getElementById('toggle-filter-btn').onclick = () => { els.sidebar.classList.toggle('-translate-x-full'); els.mainContent.classList.toggle('md:ml-72'); };
+        document.getElementById('apply-filters-btn').onclick = () => { saveFilters(); applyFilters(); };
+        document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
+        els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
+        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
 
-        // --- SCRIPT DE NAVEGAÇÃO DE ABAS ---
-        window.switchView = function(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + viewId).classList.add('active');
-        };
-    </script>
-
-    <script type="text/babel">
-        // Ícones Lucide (Versão React Simplificada)
-        const IconBase = ({ children, size = 20, className = "", ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
-        );
-        const Rocket = (p) => <IconBase {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 2.75-.45 3 0L9 12z"/><path d="M12 15v5s3.03-.55 4-2c1.1-1.62.45-2.75 0-3L12 15z"/></IconBase>;
-        const Users = (p) => <IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
-        const Store = (p) => <IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>;
-        const Plus = (p) => <IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
-        const AlertTriangle = (p) => <IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>;
-        const Hammer = (p) => <IconBase {...p}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>;
-        const CheckCircle2 = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>;
-        const Check = (p) => <IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>;
-        const MinusCircle = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>;
-        const XIcon = (p) => <IconBase {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
-        const Save = (p) => <IconBase {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>;
-
-        // Configurações
-        const projectLabels = { mix: "Mix", precificacao: "Precif.", pbm: "PBM", fideliza: "Fideliza" }; // Reduzido para teste
-        
-        function PilotPanel() {
-            // Estado conectado ao Firebase (Painel Piloto)
-            const [associados, setAssociados] = React.useState([]);
-            const [isModalOpen, setIsModalOpen] = React.useState(false);
-            
-            // --- CONEXÃO FIREBASE (REACT) ---
-            React.useEffect(() => {
-                // Acessa o objeto global criado no outro script
-                const db = window.firebaseDB;
-                const pilotRef = window.firebaseRef(db, 'painel_piloto_v1');
-                
-                window.firebaseOnValue(pilotRef, (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) setAssociados(data);
-                    else setAssociados([]); // Banco vazio
-                });
-            }, []);
-
-            const handleSave = (newData) => {
-                const db = window.firebaseDB;
-                const pilotRef = window.firebaseRef(db, 'painel_piloto_v1');
-                
-                // Adiciona novo item
-                const newId = Math.max(...associados.map(a => a.id), 0) + 1;
-                const entry = { id: newId, ...newData, projetos: { mix: 'low_priority', precificacao: 'low_priority', pbm: 'low_priority', fideliza: 'low_priority' } };
-                
-                const updatedList = [entry, ...associados];
-                window.firebaseSet(pilotRef, updatedList);
-                setIsModalOpen(false);
-            };
-
-            const toggleStatus = (id, key) => {
-                const updated = associados.map(item => {
-                    if(item.id === id) {
-                        const curr = item.projetos[key];
-                        let next = 'low_priority';
-                        if (curr === 'low_priority') next = 'priority_todo';
-                        else if (curr === 'priority_todo') next = 'priority_doing';
-                        else if (curr === 'priority_doing') next = 'priority_done';
-                        
-                        return { ...item, projetos: { ...item.projetos, [key]: next } };
-                    }
-                    return item;
-                });
-                const db = window.firebaseDB;
-                window.firebaseSet(window.firebaseRef(db, 'painel_piloto_v1'), updated);
-            };
-
-            return (
-                <div className="p-8 max-w-7xl mx-auto">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
-                        <div className="relative z-10 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-3xl font-extrabold mb-2 flex items-center gap-3"><Rocket /> Painel Piloto</h2>
-                                <p className="opacity-90">Gestão exclusiva para lojas em fase de teste.</p>
-                            </div>
-                            <button onClick={() => setIsModalOpen(true)} className="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl font-bold flex items-center gap-2 backdrop-blur-sm transition-all"><Plus /> Adicionar Piloto</button>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
-                                <tr>
-                                    <th className="p-4">Associado / Loja</th>
-                                    {Object.entries(projectLabels).map(([k,v]) => <th key={k} className="p-4 text-center">{v}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {associados.length === 0 ? <tr><td colSpan="6" className="p-8 text-center text-gray-400">Nenhum piloto cadastrado.</td></tr> :
-                                associados.map(item => (
-                                    <tr key={item.id} className="border-b hover:bg-blue-50/30 transition-colors">
-                                        <td className="p-4">
-                                            <div className="font-bold text-gray-800">{item.associado}</div>
-                                            <div className="text-sm text-gray-500">{item.loja}</div>
-                                        </td>
-                                        {Object.entries(item.projetos).map(([key, status]) => (
-                                            <td key={key} className="p-4 text-center cursor-pointer" onClick={() => toggleStatus(item.id, key)}>
-                                                <div className="flex justify-center">
-                                                    {status === 'priority_done' ? <div className="text-emerald-500 bg-emerald-100 p-2 rounded"><Check size={16}/></div> :
-                                                     status === 'priority_doing' ? <div className="text-orange-500 bg-orange-100 p-2 rounded"><Hammer size={16}/></div> :
-                                                     status === 'priority_todo' ? <div className="text-red-500 bg-red-100 p-2 rounded"><AlertTriangle size={16}/></div> :
-                                                     <div className="text-gray-300 bg-gray-50 p-2 rounded"><MinusCircle size={16}/></div>}
-                                                </div>
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                            <div className="bg-white p-6 rounded-2xl w-96 shadow-2xl animate-in zoom-in">
-                                <h3 className="font-bold text-xl mb-4">Novo Piloto</h3>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const fd = new FormData(e.target);
-                                    handleSave({ associado: fd.get('associado'), loja: fd.get('loja') });
-                                }} className="space-y-4">
-                                    <input name="associado" required placeholder="Nome Associado" className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                                    <input name="loja" required placeholder="Nome Loja" className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                                    <div className="flex gap-2 pt-2">
-                                        <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-gray-100 p-3 rounded-lg hover:bg-gray-200">Cancelar</button>
-                                        <button type="submit" className="flex-1 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold">Salvar</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('react-root'));
-        root.render(<PilotPanel />);
     </script>
 </body>
 </html>
