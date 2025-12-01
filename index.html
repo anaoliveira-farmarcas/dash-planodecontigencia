@@ -1,32 +1,255 @@
-<script type="module">
-        // 1. IMPORTAÇÃO CORRETA (Links completos para funcionar no navegador)
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Projetos - Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
+        
+        /* Estilos de Status */
+        .status-select {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
+            appearance: none; -webkit-appearance: none;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px;
+        }
+        .status-default { background-color: #f3f4f6; color: #4b5563; }
+        .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+        .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
+        .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        
+        /* Inputs da tabela */
+        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
+        
+        /* Utilitários */
+        .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        #toast { transition: transform 0.3s, opacity 0.3s; }
+        .obs-filled { color: #3b82f6; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <aside id="filter-sidebar" class="fixed top-0 left-0 z-30 w-72 h-screen bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
+        <div class="space-y-4 overflow-y-auto h-[calc(100vh-160px)] pr-2">
+            <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+            <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar CNPJ"></div>
+            <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar Loja"></div>
+        </div>
+        <div class="absolute bottom-6 left-6 right-6 space-y-3">
+            <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar</button>
+            <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar</button>
+        </div>
+    </aside>
+
+    <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
+        <header class="mb-6">
+            <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
+                <div class="flex items-center">
+                    <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
+                    <h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard Online</h1>
+                </div>
+                <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow">
+                    <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                </button>
+            </nav>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="">Todos</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="CNPJ ou Loja"></div>
+                <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full">Gerar Gráfico</button>
+            </div>
+            <div class="relative h-96"><canvas id="consolidated-chart"></canvas></div>
+        </section>
+
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-4 border-b">
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]">
+                </div>
+            </div>
+            <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky-header">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                        <tr><td colspan="29" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
+
+    <div id="store-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800"><i class="fa-solid fa-times fa-lg"></i></button>
+            </header>
+            <form id="store-form" class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Analista</label><input type="text" id="analista" name="analista" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">GE</label><input type="text" id="ge" name="ge" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Associado</label><input type="text" id="associado" name="associado" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div id="form-project-group"><label class="block text-sm font-medium">Projeto</label><select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></select></div>
+                        <div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></textarea></div>
+                    </div>
+                </div>
+            </form>
+            <footer class="flex justify-end p-5 border-t bg-gray-50">
+                <button id="cancel-modal-btn" class="bg-gray-200 text-gray-700 py-2 px-5 rounded mr-3">Cancelar</button>
+                <button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white py-2 px-5 rounded shadow">Salvar</button>
+            </footer>
+        </div>
+    </div>
+
+    <div id="chart-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2>
+                <button id="close-chart-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button>
+            </header>
+            <div class="p-6">
+                <div class="mb-4 flex justify-center space-x-6">
+                    <label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label>
+                    <label><input type="radio" name="chart-format" value="currency" class="mr-2">Moeda</label>
+                    <label><input type="radio" name="chart-format" value="percent" class="mr-2">%</label>
+                </div>
+                <canvas id="indicator-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="obs-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <header class="flex justify-between items-center p-5 border-b"><h2 id="obs-modal-title" class="font-bold">Obs</h2></header>
+            <div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div>
+            <footer class="flex justify-end p-5 border-t"><button id="cancel-obs-btn" class="bg-gray-200 px-4 py-2 rounded mr-2">Cancelar</button><button id="save-obs-btn" class="bg-[#FF5510] text-white px-4 py-2 rounded">Salvar</button></footer>
+        </div>
+    </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4">Excluir?</h2>
+            <p id="delete-modal-text" class="mb-6">Tem certeza?</p>
+            <div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importações do Firebase (Compatíveis com Navegador)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 2. SUA CONFIGURAÇÃO COMPLETA (Adicionei a linha databaseURL que faltava)
+        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE (JÁ CORRIGIDA)
+        // =========================================================
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
-            // 👇 ESTA LINHA É OBRIGATÓRIA PARA O SITE FUNCIONAR 👇
+            // Esta linha é crucial e eu gerei baseada no seu ID do projeto
             databaseURL: "https://dashboardprojetos-a749c-default-rtdb.firebaseio.com",
             projectId: "dashboardprojetos-a749c",
             storageBucket: "dashboardprojetos-a749c.firebasestorage.app",
             messagingSenderId: "208429748638",
             appId: "1:208429748638:web:9d5ee72514035221b3c68f"
         };
+        // =========================================================
 
-        // Inicializa o App
+        // Inicializa Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const dbRef = ref(db, 'dashboard_projetos_v1');
 
-        // --- VARIÁVEIS DO SISTEMA ---
+        // Variáveis de Estado
         let allStoresData = []; 
         let allFlattenedData = [];
         let currentChartInstance = null; 
         let consolidatedChartInstance = null;
         let currentChartRowData = null;
 
+        // Listas e Constantes
         const projectList = ["MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"];
         const statusList = [{val:'pendente', txt:'Pendente', cls:'status-pendente'}, {val:'andamento', txt:'Em Andamento', cls:'status-andamento'}, {val:'pendente-associa', txt:'Pendente Assoc.', cls:'status-pendente-associa'}, {val:'finalizado', txt:'Finalizado', cls:'status-finalizado'}];
         const indicatorMonths = [
@@ -39,7 +262,7 @@
         ];
         const chartLabels = indicatorMonths.map(m => m.label);
 
-        // Elementos da Tela
+        // Elementos da Interface
         const els = {
             tableBody: document.getElementById('project-table-body'),
             toast: document.getElementById('toast'),
@@ -71,25 +294,25 @@
             }
         };
 
-        // --- CONEXÃO COM O BANCO ---
+        // --- CONEXÃO REALTIME ---
         onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
             processData();
-            showToast("Conectado!", false, 1500);
+            showToast("Sincronizado!", false, 1500);
         }, (error) => {
             console.error("Erro Firebase:", error);
-            showToast("Erro de Conexão. Banco criado?", true, 5000);
+            showToast("Erro: Permissão negada ou Banco inexistente!", true, 5000);
         });
 
         function saveToFirebase(newData) {
             set(dbRef, newData).catch(err => {
                 console.error(err);
-                showToast("Erro ao salvar! Permissão negada?", true);
+                showToast("Erro ao salvar dados!", true);
             });
         }
 
-        // --- LÓGICA DO SISTEMA ---
+        // --- LÓGICA E PROCESSAMENTO ---
         function processData() {
             allFlattenedData = [];
             const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), anjos: new Set(), ufs: new Set(), bandeiras: new Set() };
@@ -199,6 +422,7 @@
             els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
         }
 
+        // --- ATUALIZAÇÃO NO BANCO ---
         function updateGeneric(id, pName, fn) {
             const clone = JSON.parse(JSON.stringify(allStoresData));
             const idx = clone.findIndex(s => s && s.id === id);
@@ -218,3 +442,206 @@
             const el = e.target;
             updateGeneric(el.dataset.id, el.dataset.p, (proj) => {
                 if(!proj.indicators) proj.indicators = {};
+                proj.indicators[el.dataset.m] = el.value;
+            });
+            flash(el);
+        }
+
+        function updateMeta(e) {
+            const el = e.target;
+            updateGeneric(el.dataset.id, el.dataset.p, (proj) => proj.goal = el.value);
+            flash(el);
+        }
+
+        function flash(el) {
+            el.classList.add('bg-green-100', 'border-green-500');
+            setTimeout(() => el.classList.remove('bg-green-100', 'border-green-500'), 1000);
+        }
+
+        // --- MANIPULADORES DE MODAIS ---
+        els.storeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('save-store-btn').disabled = true;
+            const data = new FormData(els.storeForm);
+            const id = data.get('cnpj');
+            const clone = JSON.parse(JSON.stringify(allStoresData));
+            let idx = clone.findIndex(s => s && s.id === id);
+            
+            const common = {
+                analista: data.get('analista'), anjo: data.get('anjo'), uf: data.get('uf'),
+                bandeira: data.get('bandeira'), ge: data.get('ge'), associado: data.get('associado'),
+                nomeLoja: data.get('nome-loja')
+            };
+
+            if(document.getElementById('cnpj').readOnly) { // Edit Mode
+                 if(idx > -1) clone[idx] = { ...clone[idx], ...common };
+            } else { // Create Mode
+                const pName = data.get('nome-projeto');
+                if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); document.getElementById('save-store-btn').disabled=false; return; }
+                const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
+                indicatorMonths.forEach(m => newProj.indicators[m.id] = '');
+                
+                if(idx > -1) {
+                    clone[idx] = { ...clone[idx], ...common };
+                    if(!clone[idx].projects) clone[idx].projects = {};
+                    clone[idx].projects[pName] = newProj;
+                } else {
+                    clone.push({ ...common, id: id, projects: { [pName]: newProj } });
+                }
+            }
+            saveToFirebase(clone);
+            hide(els.storeModal);
+            document.getElementById('save-store-btn').disabled = false;
+        });
+
+        // --- KPI & HELPERS ---
+        function calcKPIs() {
+            const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
+            allFlattenedData.forEach(r => {
+                k.total.add(r.id);
+                if(r.status === 'pendente') k.pend++;
+                else if(r.status === 'pendente-associa') k.assoc++;
+                else if(r.status === 'finalizado') k.fin++;
+                else if(r.status === 'andamento') k.and++;
+            });
+            els.kpis.total.textContent = k.total.size;
+            els.kpis.pendente.textContent = k.pend;
+            els.kpis.associa.textContent = k.assoc;
+            els.kpis.finalizado.textContent = k.fin;
+            els.kpis.andamento.textContent = k.and;
+        }
+
+        function showToast(msg, err, duration=3000) {
+            els.toast.textContent = msg;
+            els.toast.className = `fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg z-50 transform transition-all duration-300 ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`;
+            setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), duration);
+        }
+
+        // --- EVENTOS GERAIS ---
+        function openObs(e) {
+            const {id, p} = e.currentTarget.dataset;
+            const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            document.getElementById('obs-modal-textarea').value = row?.observation || '';
+            document.getElementById('save-obs-btn').onclick = () => {
+                updateGeneric(id, p, (pr) => pr.observation = document.getElementById('obs-modal-textarea').value);
+                hide(els.obsModal);
+            };
+            show(els.obsModal);
+        }
+
+        function confirmDel(e) {
+            const {id, p} = e.currentTarget.dataset;
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                const clone = JSON.parse(JSON.stringify(allStoresData));
+                const idx = clone.findIndex(s => s && s.id === id);
+                if(idx > -1) {
+                    delete clone[idx].projects[p];
+                    saveToFirebase(clone);
+                }
+                hide(els.deleteModal);
+            };
+            show(els.deleteModal);
+        }
+
+        function editStore(e) {
+            const id = e.currentTarget.dataset.id;
+            const d = allFlattenedData.find(r => r.id === id);
+            if(!d) return;
+            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
+            document.getElementById('cnpj').value = id; document.getElementById('cnpj').readOnly = true;
+            document.getElementById('store-modal-title').textContent = "Editar Loja";
+            document.getElementById('form-project-group').style.display = 'none';
+            document.getElementById('form-meta-group').style.display = 'none';
+            document.getElementById('form-observation-group').style.display = 'none';
+            document.getElementById('nome-projeto').required = false;
+            show(els.storeModal);
+        }
+
+        function openChart(e) {
+            const {id, p} = e.currentTarget.dataset;
+            currentChartRowData = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            renderChart('number');
+            show(els.chartModal);
+        }
+
+        function renderChart(fmt) {
+            if(!currentChartRowData) return;
+            const ctx = document.getElementById('indicator-chart').getContext('2d');
+            if(currentChartInstance) currentChartInstance.destroy();
+            const data = indicatorMonths.map(m => Number(currentChartRowData.indicators?.[m.id]) || 0);
+            const goal = Number(currentChartRowData.goal) || 0;
+            
+            currentChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: chartLabels, datasets: [{ label: 'Realizado', data, borderColor: '#FF5510', backgroundColor: 'rgba(255,85,16,0.1)', fill: true, tension: 0.1 }] },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { 
+                        annotation: { annotations: { line1: { type: 'line', yMin: goal, yMax: goal, borderColor: 'red', borderWidth: 2, borderDash: [5,5], label: { enabled: true, content: 'Meta: '+goal } } } }
+                    }
+                }
+            });
+        }
+        
+        document.getElementById('generate-chart-btn').addEventListener('click', () => {
+             const proj = document.getElementById('chart-filter-project').value;
+             const ge = document.getElementById('chart-filter-ge').value;
+             const term = document.getElementById('chart-filter-cnpj-loja').value.toLowerCase();
+             if(!proj) { showToast("Selecione um projeto", true); return; }
+
+             const rows = allFlattenedData.filter(r => r.projectName === proj && (!ge || r.ge === ge) && (!term || r.nomeLoja.toLowerCase().includes(term) || r.id.includes(term)));
+             const ctx = document.getElementById('consolidated-chart').getContext('2d');
+             if(consolidatedChartInstance) consolidatedChartInstance.destroy();
+             
+             consolidatedChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: rows.map(r => ({
+                        label: r.nomeLoja,
+                        data: indicatorMonths.map(m => Number(r.indicators?.[m.id])||0),
+                        borderColor: '#'+Math.floor(Math.random()*16777215).toString(16),
+                        tension: 0.1, fill: false
+                    }))
+                },
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+             });
+        });
+
+        // UTILITÁRIOS
+        const show = (el) => el.classList.remove('hidden');
+        const hide = (el) => el.classList.add('hidden');
+        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v.value]))));
+        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => els.filters[k].value = v); };
+        
+        // LISTENERS GLOBAIS
+        document.getElementById('open-modal-btn').onclick = () => {
+            els.storeForm.reset(); document.getElementById('cnpj').readOnly = false;
+            document.getElementById('store-modal-title').textContent = "Nova Loja";
+            document.getElementById('form-project-group').style.display = 'block';
+            document.getElementById('form-meta-group').style.display = 'block';
+            document.getElementById('form-observation-group').style.display = 'block';
+            document.getElementById('nome-projeto').required = true;
+            show(els.storeModal);
+        };
+        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.storeModal));
+        document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
+        ['cancel-obs-btn','close-obs-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
+        document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
+        document.getElementById('toggle-filter-btn').onclick = () => { els.sidebar.classList.toggle('-translate-x-full'); els.mainContent.classList.toggle('md:ml-72'); };
+        document.getElementById('apply-filters-btn').onclick = () => { saveFilters(); applyFilters(); };
+        document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
+        els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
+        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
+
+        // Inicializa Dropdowns
+        const pSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
+        pSelects.forEach(sel => {
+            sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione</option>' : '<option value="">Todos</option>';
+            projectList.forEach(p => sel.add(new Option(p, p)));
+        });
+
+    </script>
+</body>
+</html>
