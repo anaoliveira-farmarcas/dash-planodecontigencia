@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Integrado Farmarcas</title>
+    <title>Sistema Integrado - Farmarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -19,182 +18,196 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* RESET E NAVEGAÇÃO */
-        body { margin: 0; padding: 0; background-color: #f8fafc; }
+        /* Fontes */
+        .font-rubik { font-family: 'Rubik', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
         
-        .top-nav {
-            background: #1e293b; color: white; padding: 0 1.5rem; height: 64px;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-        .nav-brand { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; display: flex; gap: 10px; align-items: center; }
-        .nav-tabs { display: flex; gap: 4px; height: 100%; align-items: flex-end; }
+        body { background-color: #f3f4f6; }
         
-        .tab-btn {
-            padding: 0.75rem 1.5rem; background: transparent; border: none; color: #94a3b8;
-            font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer;
-            border-bottom: 3px solid transparent; transition: all 0.2s; height: 100%;
-            display: flex; align-items: center; gap: 8px;
+        /* Estilos Dashboard 1 */
+        .status-select {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
+            appearance: none; -webkit-appearance: none;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px;
         }
-        .tab-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
-        .tab-btn.active { color: #FF5510; border-bottom-color: #FF5510; background: rgba(255, 85, 16, 0.05); }
-
-        /* Controles de Exibição */
-        .panel-section { display: none; width: 100%; min-height: calc(100vh - 64px); }
-        .panel-section.active { display: block; }
-
-        /* --- ESTILOS DO DASHBOARD 1 (LEGACY) --- */
-        #legacy-panel { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
-        .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500; appearance: none; background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px; }
         .status-default { background-color: #f3f4f6; color: #4b5563; }
         .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
         .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
         .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
         .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
-        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; }
-        .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
-        .obs-filled { color: #3b82f6; }
-
-        /* --- ESTILOS DO DASHBOARD 2 (REACT) --- */
-        #react-pilot-root { font-family: 'Inter', sans-serif; }
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
         
-        /* Scrollbar Global */
+        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
+        
+        .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         #toast { transition: transform 0.3s, opacity 0.3s; }
+        .obs-filled { color: #3b82f6; }
+        
+        /* Controle de Abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-btn.active { background-color: #FF5510; color: white; }
+        .nav-btn { width: 100%; text-align: left; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-weight: 600; color: #4b5563; transition: all 0.2s; }
+        .nav-btn:hover:not(.active) { background-color: #e5e7eb; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-rubik">
 
-    <nav class="top-nav">
-        <div class="nav-brand">
-            <i class="fa-solid fa-layer-group text-[#FF5510]"></i>
-            <span>Farmarcas</span>
-        </div>
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('legacy-panel', this)">
-                <i class="fa-solid fa-chart-line"></i> Dashboard Geral
-            </button>
-            <button class="tab-btn" onclick="switchTab('react-panel', this)">
-                <i class="fa-solid fa-rocket"></i> Projeto Piloto
-            </button>
-        </div>
-    </nav>
-
-    <div id="legacy-panel" class="panel-section active">
+    <aside id="main-sidebar" class="fixed top-0 left-0 z-30 w-72 h-screen bg-white shadow-lg p-6 flex flex-col">
+        <h3 class="text-2xl font-extrabold text-[#FF5510] mb-8">Farmarcas <span class="text-gray-600 text-sm block font-normal">Gestão de Projetos</span></h3>
         
-        <aside id="filter-sidebar" class="fixed top-[64px] left-0 z-30 w-72 h-[calc(100vh-64px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-            <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
-            <div class="space-y-4 overflow-y-auto h-[calc(100vh-200px)] pr-2">
-                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Loja/CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Buscar..."></div>
-            </div>
-            <div class="absolute bottom-6 left-6 right-6 space-y-3">
-                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
-                <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar</button>
-            </div>
-        </aside>
+        <nav class="flex-1 space-y-2">
+            <button onclick="switchTab('dashboard-geral')" id="btn-dashboard-geral" class="nav-btn active">
+                <i class="fa-solid fa-chart-pie mr-2"></i> Dashboard Geral
+            </button>
+            <button onclick="switchTab('projeto-piloto')" id="btn-projeto-piloto" class="nav-btn">
+                <i class="fa-solid fa-rocket mr-2"></i> Projeto Piloto
+            </button>
+        </nav>
 
-        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
+        <div id="sidebar-filters" class="mt-6 border-t pt-4">
+            <h4 class="text-sm font-bold text-gray-500 mb-3 uppercase">Filtros (Geral)</h4>
+            <div class="space-y-3 overflow-y-auto max-h-[40vh] pr-2 text-sm">
+                <div><select id="filter-analista" class="w-full rounded border-gray-300"></select></div>
+                <div><select id="filter-ge" class="w-full rounded border-gray-300"></select></div>
+                <div><select id="filter-associado" class="w-full rounded border-gray-300"></select></div>
+                <div><select id="filter-uf" class="w-full rounded border-gray-300"></select></div>
+                <div><select id="filter-projeto" class="w-full rounded border-gray-300"></select></div>
+                <div><input type="text" id="filter-loja" class="w-full rounded border-gray-300" placeholder="Buscar Loja..."></div>
+                <button id="apply-filters-btn" class="w-full bg-gray-800 text-white py-1.5 rounded hover:bg-black">Filtrar</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="md:ml-72 transition-all duration-300 min-h-screen">
+        
+        <div id="view-dashboard-geral" class="tab-content active p-6">
             <header class="mb-6">
                 <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
-                    <div class="flex items-center"><button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button><h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard de Projetos</h1></div>
-                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow"><i class="fa-solid fa-plus"></i><span>Inserir Loja</span></button>
+                    <h1 class="text-2xl font-extrabold text-gray-800">Dashboard Online</h1>
+                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow text-sm">
+                        <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                    </button>
                 </nav>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-sm font-medium text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-sm font-medium text-gray-500 uppercase">Pend. Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-xs font-bold text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendente Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-2xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-900">0</p></div>
                 </div>
             </header>
 
             <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+                <h2 class="text-xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-                    <div><label class="text-xs text-gray-500">Projeto</label><select id="chart-filter-project" class="w-full rounded border-gray-300"></select></div>
-                    <div><label class="text-xs text-gray-500">GE</label><select id="chart-filter-ge" class="w-full rounded border-gray-300"><option value="">Todos</option></select></div>
-                    <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 rounded font-semibold hover:bg-[#E04A0E]">Gerar</button>
+                    <div><label class="block text-xs font-bold text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"><option value="">Todos</option></select></div>
+                    <div><label class="block text-xs font-bold text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="CNPJ ou Loja"></div>
+                    <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full text-sm">Gerar</button>
                 </div>
-                <div class="relative h-72"><canvas id="consolidated-chart"></canvas></div>
+                <div class="relative h-80"><canvas id="consolidated-chart"></canvas></div>
             </section>
 
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div class="p-4 border-b"><input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]"></div>
-                <div class="overflow-x-auto max-h-[500px]">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <div class="p-4 border-b"><input type="text" id="search-input" placeholder="Pesquisar na tabela..." class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]"></div>
+                <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky-header">
                             <tr>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">Loja</th>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">CNPJ</th>
-                                <th class="px-4 py-3 text-left font-bold text-gray-600">Projeto</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Status</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Meta</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ago/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Set/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Out/25</th>
-                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ações</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="10" class="text-center p-8 text-gray-500">Carregando Firebase...</td></tr>
-                        </tbody>
+                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
 
-    <div id="react-panel" class="panel-section">
-        <div id="react-pilot-root"></div>
-    </div>
+        <div id="view-projeto-piloto" class="tab-content font-inter">
+            <div id="react-root"></div>
+        </div>
+
+    </main>
 
     <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
     
-    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b flex justify-between"><h2 id="store-modal-title" class="font-bold text-lg">Dados Loja</h2><button id="close-modal-btn"><i class="fa-solid fa-times"></i></button></div>
-            <form id="store-form" class="p-6 overflow-y-auto space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" name="nome-loja" required placeholder="Nome Loja" class="border p-2 rounded">
-                    <input type="text" id="cnpj" name="cnpj" required placeholder="CNPJ" class="border p-2 rounded">
-                    <input type="text" name="ge" placeholder="GE" class="border p-2 rounded">
-                    <input type="text" name="analista" placeholder="Analista" class="border p-2 rounded">
-                    <input type="text" name="associado" placeholder="Associado" class="border p-2 rounded">
-                    <input type="text" name="uf" placeholder="UF" class="border p-2 rounded">
+    <div id="store-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <header class="flex justify-between items-center p-5 border-b"><h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2><button id="close-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button></header>
+            <form id="store-form" class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Analista</label><input type="text" id="analista" name="analista" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">GE</label><input type="text" id="ge" name="ge" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Associado</label><input type="text" id="associado" name="associado" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div id="form-project-group">
+                            <label class="block text-sm font-medium">Projeto</label>
+                            <select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"><option value="" disabled selected>Carregando...</option></select>
+                        </div>
+                        <div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
+                        <div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></textarea></div>
+                    </div>
                 </div>
-                <div id="create-only-fields" class="space-y-4 border-t pt-4">
-                    <select id="nome-projeto" name="nome-projeto" class="w-full border p-2 rounded"><option value="">Selecione Projeto</option></select>
-                    <input type="number" name="meta" placeholder="Meta" class="w-full border p-2 rounded">
-                    <textarea name="observation" placeholder="Obs" class="w-full border p-2 rounded"></textarea>
-                </div>
-                <button type="submit" id="save-store-btn" class="w-full bg-[#FF5510] text-white py-2 rounded font-bold">Salvar</button>
             </form>
+            <footer class="flex justify-end p-5 border-t bg-gray-50"><button id="cancel-modal-btn" class="bg-gray-200 text-gray-700 py-2 px-5 rounded mr-3">Cancelar</button><button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white py-2 px-5 rounded shadow">Salvar</button></footer>
         </div>
     </div>
-    
-    <div id="chart-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-4 rounded w-3/4"><canvas id="indicator-chart"></canvas><button id="close-chart-modal-btn" class="mt-4 bg-gray-200 p-2 rounded">Fechar</button></div></div>
-    <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-6 rounded"><p>Confirmar exclusão?</p><div class="flex gap-2 mt-4"><button id="confirm-delete-btn" class="bg-red-500 text-white p-2 rounded">Sim</button><button id="cancel-delete-btn" class="bg-gray-200 p-2 rounded">Não</button></div></div></div>
 
-    <script>
-        function switchTab(panelId, btn) {
-            document.querySelectorAll('.panel-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(panelId).classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-    </script>
+    <div id="chart-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl"><header class="flex justify-between items-center p-5 border-b"><h2 class="text-xl font-bold">Gráfico</h2><button id="close-chart-modal-btn"><i class="fa-solid fa-times"></i></button></header><div class="p-6"><div class="mb-4 flex justify-center space-x-6"><label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label><label><input type="radio" name="chart-format" value="currency" class="mr-2">Moeda</label><label><input type="radio" name="chart-format" value="percent" class="mr-2">%</label></div><canvas id="indicator-chart"></canvas></div></div>
+    </div>
+
+    <div id="obs-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><header class="flex justify-between items-center p-5 border-b"><h2 class="font-bold">Obs</h2></header><div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div><footer class="flex justify-end p-5 border-t"><button id="cancel-obs-btn" class="bg-gray-200 px-4 py-2 rounded mr-2">Cancelar</button><button id="save-obs-btn" class="bg-[#FF5510] text-white px-4 py-2 rounded">Salvar</button></footer></div>
+    </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Excluir?</h2><p class="mb-6">Tem certeza?</p><div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // SUAS CHAVES FIREBASE (NÃO APAGUE)
+        // CONFIGURAÇÃO FIREBASE (ÚNICA)
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -208,301 +221,521 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // Expor Firebase para o React
+        // Expor Firebase para o React e Vanilla usarem globalmente
         window.firebaseDB = db;
         window.firebaseRef = ref;
         window.firebaseSet = set;
         window.firebaseOnValue = onValue;
 
-        // Lógica Dashboard 1
-        const dbRef1 = ref(db, 'dashboard_projetos_v1');
+        // --- LÓGICA DO DASHBOARD GERAL (VANILLA JS) ---
+        const dbRefV1 = ref(db, 'dashboard_projetos_v1');
+        
+        // (Lista de projetos original)
         const projectList = ["MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"];
-        const indicatorMonths = [{ id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' }, { id: 'nov2025', label: 'Nov/25' }];
-        const statusList = [{val:'pendente',txt:'Pendente',cls:'status-pendente'},{val:'andamento',txt:'Andamento',cls:'status-andamento'},{val:'pendente-associa',txt:'Pend. Assoc.',cls:'status-pendente-associa'},{val:'finalizado',txt:'Finalizado',cls:'status-finalizado'}];
 
+        // Função para alternar abas
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabName}`).classList.add('active');
+            document.getElementById(`btn-${tabName}`).classList.add('active');
+            
+            // Mostrar/Ocultar filtros da sidebar
+            const sidebarFilters = document.getElementById('sidebar-filters');
+            if(tabName === 'dashboard-geral') sidebarFilters.style.display = 'block';
+            else sidebarFilters.style.display = 'none';
+        }
+
+        // Inicialização Dropdowns
         function initDropdowns() {
             const pSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
             pSelects.forEach(sel => {
                 if(!sel) return;
-                sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione</option>' : '<option value="">Todos</option>';
+                sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione um projeto</option>' : '<option value="">Todos os Projetos</option>';
                 projectList.forEach(p => sel.add(new Option(p, p)));
             });
         }
         initDropdowns();
 
-        let allStoresData = [], allFlattenedData = [], currentChartInstance = null, currentChartRowData = null;
+        // Variáveis e Listas Auxiliares
+        let allStoresData = [], allFlattenedData = [];
+        let currentChartInstance = null, consolidatedChartInstance = null, currentChartRowData = null;
+        const statusList = [{val:'pendente', txt:'Pendente', cls:'status-pendente'}, {val:'andamento', txt:'Em Andamento', cls:'status-andamento'}, {val:'pendente-associa', txt:'Pendente Assoc.', cls:'status-pendente-associa'}, {val:'finalizado', txt:'Finalizado', cls:'status-finalizado'}];
+        const indicatorMonths = [
+            { id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' },
+            { id: 'nov2025', label: 'Nov/25' }, { id: 'dec2025', label: 'Dez/25' }, { id: 'jan2026', label: 'Jan/26' },
+            { id: 'feb2026', label: 'Fev/26' }, { id: 'mar2026', label: 'Mar/26' }, { id: 'apr2026', label: 'Abr/26' },
+            { id: 'may2026', label: 'Mai/26' }, { id: 'jun2026', label: 'Jun/26' }, { id: 'jul2026', label: 'Jul/26' },
+            { id: 'aug2026', label: 'Ago/26' }, { id: 'sep2026', label: 'Set/26' }, { id: 'oct2026', label: 'Out/26' },
+            { id: 'nov2026', label: 'Nov/26' }, { id: 'dec2026', label: 'Dez/26' }
+        ];
+        const chartLabels = indicatorMonths.map(m => m.label);
 
-        onValue(dbRef1, (snapshot) => {
+        // Elementos DOM
+        const els = {
+            tableBody: document.getElementById('project-table-body'), toast: document.getElementById('toast'),
+            storeModal: document.getElementById('store-modal'), storeForm: document.getElementById('store-form'),
+            chartModal: document.getElementById('chart-modal'), obsModal: document.getElementById('obs-modal'),
+            deleteModal: document.getElementById('delete-confirm-modal'), searchInput: document.getElementById('search-input'),
+            kpis: { total: document.getElementById('kpi-total-lojas'), pendente: document.getElementById('kpi-projetos-pendentes'), associa: document.getElementById('kpi-projetos-pendentes-associa'), finalizado: document.getElementById('kpi-projetos-finalizados'), andamento: document.getElementById('kpi-em-andamento') },
+            filters: { analista: document.getElementById('filter-analista'), ge: document.getElementById('filter-ge'), associado: document.getElementById('filter-associado'), uf: document.getElementById('filter-uf'), projeto: document.getElementById('filter-projeto'), loja: document.getElementById('filter-loja') }
+        };
+
+        // --- CONEXÃO FIREBASE (Dashboard Geral) ---
+        onValue(dbRefV1, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-            processDataV1();
+            processData();
         });
 
-        function processDataV1() {
-            allFlattenedData = [];
-            allStoresData.forEach(store => {
-                if(!store || !store.projects) return;
-                Object.keys(store.projects).forEach(pName => {
-                    allFlattenedData.push({ ...store, projectName: pName, ...store.projects[pName] });
-                });
-            });
-            renderTableV1(allFlattenedData);
-            updateKPIsV1();
+        function saveToFirebase(newData) {
+            set(dbRefV1, newData).catch(err => { console.error(err); showToast("Erro ao salvar!", true); });
         }
 
-        function renderTableV1(data) {
-            const tbody = document.getElementById('project-table-body');
-            tbody.innerHTML = '';
-            if(!data.length) { tbody.innerHTML = '<tr><td colspan="15" class="p-8 text-center text-gray-500">Nenhum dado encontrado.</td></tr>'; return; }
-            
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                const statusClass = statusList.find(s=>s.val===row.status)?.cls || 'status-default';
-                const inputs = indicatorMonths.map(m => `<td class="px-2 text-center text-xs"><input class="indicator-input-table" value="${row.indicators?.[m.id] || ''}" disabled></td>`).join('');
-                tr.innerHTML = `
-                    <td class="px-4 py-2 font-medium">${row.nomeLoja}</td>
-                    <td class="px-4 py-2 text-xs text-gray-500">${row.id}</td>
-                    <td class="px-4 py-2 font-bold text-xs">${row.projectName}</td>
-                    <td class="px-4 py-2 text-center text-xs"><select class="status-select ${statusClass} text-xs" data-id="${row.id}" data-p="${row.projectName}">${statusList.map(s=>`<option value="${s.val}" ${row.status===s.val?'selected':''}>${s.txt}</option>`).join('')}</select></td>
-                    <td class="px-4 py-2 text-center text-xs">${row.goal || '-'}</td>
+        // Funções de Processamento (Simplificadas)
+        function processData() {
+            allFlattenedData = [];
+            const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), ufs: new Set() };
+            allStoresData.forEach(store => {
+                if(!store) return;
+                if(store.analista) sets.analistas.add(store.analista); if(store.ge) sets.ges.add(store.ge);
+                if(store.associado) sets.associados.add(store.associado); if(store.uf) sets.ufs.add(store.uf);
+                if(store.projects) Object.keys(store.projects).forEach(pName => {
+                    allFlattenedData.push({ ...store, projectName: pName, ...store.projects[pName], projects: undefined });
+                });
+            });
+            allFlattenedData.sort((a,b) => a.nomeLoja.localeCompare(b.nomeLoja));
+            populateFilters(sets); applyFilters(); calcKPIs();
+        }
+
+        function populateFilters(sets) {
+            const fill = (el, set) => {
+                const cur = el.value; el.innerHTML = '<option value="">Todos</option>';
+                [...set].sort().forEach(v => v && el.add(new Option(v, v))); el.value = cur;
+            };
+            fill(els.filters.analista, sets.analistas); fill(els.filters.ge, sets.ges);
+            fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs);
+            const chartGe = document.getElementById('chart-filter-ge');
+            const curGe = chartGe.value; chartGe.innerHTML = '<option value="">Todos</option>';
+            [...sets.ges].sort().forEach(v => v && chartGe.add(new Option(v, v))); chartGe.value = curGe;
+        }
+
+        function applyFilters() {
+            const s = els.searchInput.value.toLowerCase();
+            const f = els.filters;
+            const filtered = allFlattenedData.filter(r => {
+                const matchesSearch = !s || r.nomeLoja.toLowerCase().includes(s) || r.id.toLowerCase().includes(s);
+                return matchesSearch && (!f.analista.value || r.analista === f.analista.value) &&
+                    (!f.ge.value || r.ge === f.ge.value) && (!f.associado.value || r.associado === f.associado.value) &&
+                    (!f.uf.value || r.uf === f.uf.value) && (!f.projeto.value || r.projectName === f.projeto.value) &&
+                    (!f.loja.value || r.nomeLoja.toLowerCase().includes(f.loja.value.toLowerCase()));
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            els.tableBody.innerHTML = '';
+            if(!data.length) { els.tableBody.innerHTML = '<tr><td colspan="29" class="p-8 text-center text-gray-500">Nenhum dado encontrado.</td></tr>'; return; }
+            data.forEach(r => {
+                const tr = document.createElement('tr'); tr.className = 'bg-white border-b hover:bg-gray-50';
+                const statusOpts = statusList.map(s => `<option value="${s.val}" ${r.status===s.val?'selected':''}>${s.txt}</option>`).join('');
+                const statusClass = statusList.find(s=>s.val===r.status)?.cls || 'status-default';
+                const inputs = indicatorMonths.map(m => `<td class="px-2 py-2 text-center"><input type="number" class="indicator-input-table" value="${r.indicators?.[m.id]||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}" data-m="${m.id}"></td>`).join('');
+                
+                tr.innerHTML = `<td class="px-4 py-3 font-medium whitespace-nowrap">${r.nomeLoja}</td><td class="px-4 py-3 text-xs text-gray-600">${r.id}</td><td class="px-4 py-3 text-xs text-gray-600">${r.analista||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.ge||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.associado||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.bandeira||'-'}</td><td class="px-4 py-3 font-bold text-gray-800 text-xs">${r.projectName}</td>
+                    <td class="px-4 py-3 text-center"><select class="status-select ${statusClass} text-xs" data-id="${r.id}" data-p="${r.projectName}">${statusOpts}</select></td>
+                    <td class="px-4 py-2 text-center"><input type="number" class="indicator-input-table meta-input" value="${r.goal||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}"></td>
                     ${inputs}
-                    <td class="px-4 py-2 text-center"><button class="text-red-500 del-btn" data-id="${row.id}" data-p="${row.projectName}"><i class="fa-solid fa-trash"></i></button></td>
-                `;
-                tbody.appendChild(tr);
+                    <td class="px-4 py-3 text-center"><button class="view-obs-btn ${r.observation&&r.observation.trim()?'obs-filled':'text-gray-400'}" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-note-sticky"></i></button></td>
+                    <td class="px-4 py-3 text-center flex gap-2 justify-center"><button class="edit-btn text-blue-500" data-id="${r.id}"><i class="fa-solid fa-pencil"></i></button><button class="chart-btn text-[#FF5510]" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-chart-line"></i></button><button class="del-btn text-red-500" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-trash"></i></button></td>`;
+                els.tableBody.appendChild(tr);
             });
-            tbody.querySelectorAll('select').forEach(el => el.onchange = (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, p => p.status = e.target.value));
-            tbody.querySelectorAll('.del-btn').forEach(el => el.onclick = (e) => {
-                if(confirm("Excluir?")) {
-                    const {id, p} = e.currentTarget.dataset;
-                    const clone = JSON.parse(JSON.stringify(allStoresData));
-                    const idx = clone.findIndex(s => s && s.id === id);
-                    if(idx>-1) { delete clone[idx].projects[p]; set(dbRef1, clone); }
-                }
-            });
+            // Listeners da tabela
+            els.tableBody.querySelectorAll('select').forEach(el => el.addEventListener('change', (e) => {
+                updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => p.status = e.target.value);
+            }));
+            els.tableBody.querySelectorAll('.indicator-input-table:not(.meta-input)').forEach(el => el.addEventListener('change', (e) => {
+                updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => { if(!p.indicators) p.indicators={}; p.indicators[e.target.dataset.m] = e.target.value; });
+            }));
+            els.tableBody.querySelectorAll('.meta-input').forEach(el => el.addEventListener('change', (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => p.goal = e.target.value)));
+            els.tableBody.querySelectorAll('.view-obs-btn').forEach(el => el.addEventListener('click', openObs));
+            els.tableBody.querySelectorAll('.chart-btn').forEach(el => el.addEventListener('click', openChart));
+            els.tableBody.querySelectorAll('.del-btn').forEach(el => el.addEventListener('click', confirmDel));
+            els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
         }
 
         function updateGeneric(id, pName, fn) {
             const clone = JSON.parse(JSON.stringify(allStoresData));
             const idx = clone.findIndex(s => s && s.id === id);
-            if(idx > -1 && clone[idx].projects[pName]) { fn(clone[idx].projects[pName]); set(dbRef1, clone); }
+            if(idx > -1 && clone[idx].projects[pName]) { fn(clone[idx].projects[pName]); saveToFirebase(clone); }
         }
 
-        function updateKPIsV1() {
-            document.getElementById('kpi-total-lojas').textContent = new Set(allFlattenedData.map(r=>r.id)).size;
-            document.getElementById('kpi-projetos-pendentes').textContent = allFlattenedData.filter(r=>r.status==='pendente').length;
+        function calcKPIs() {
+            const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
+            allFlattenedData.forEach(r => {
+                k.total.add(r.id);
+                if(r.status === 'pendente') k.pend++; else if(r.status === 'pendente-associa') k.assoc++;
+                else if(r.status === 'finalizado') k.fin++; else if(r.status === 'andamento') k.and++;
+            });
+            els.kpis.total.textContent = k.total.size; els.kpis.pendente.textContent = k.pend;
+            els.kpis.associa.textContent = k.assoc; els.kpis.finalizado.textContent = k.fin; els.kpis.andamento.textContent = k.and;
         }
 
-        const show = (id) => document.getElementById(id).classList.remove('hidden');
-        const hide = (id) => document.getElementById(id).classList.add('hidden');
-        document.getElementById('open-modal-btn').onclick = () => { document.getElementById('store-form').reset(); show('store-modal'); };
-        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide('store-modal'));
-        document.getElementById('close-chart-modal-btn').onclick = () => hide('chart-modal');
-        document.getElementById('store-form').onsubmit = (e) => {
+        // Modais e Gráficos (Dashboard 1)
+        function showToast(msg, err) { els.toast.textContent = msg; els.toast.className = `fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg z-50 transform transition-all duration-300 ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`; setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), 3000); }
+        function hide(el) { el.classList.add('hidden'); } function show(el) { el.classList.remove('hidden'); }
+        
+        els.storeForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const fd = new FormData(e.target);
-            const id = fd.get('cnpj');
-            const pName = fd.get('nome-projeto');
-            let stores = JSON.parse(JSON.stringify(allStoresData));
-            let idx = stores.findIndex(s => s && s.id === id);
-            const newStore = { id, nomeLoja: fd.get('nome-loja'), ge: fd.get('ge'), analista: fd.get('analista'), associado: fd.get('associado') };
-            const newProj = { status: 'pendente', goal: fd.get('meta'), indicators: {} };
-            if(idx > -1) { stores[idx] = { ...stores[idx], ...newStore }; if(!stores[idx].projects) stores[idx].projects={}; stores[idx].projects[pName] = newProj; } 
-            else { stores.push({ ...newStore, projects: { [pName]: newProj } }); }
-            set(dbRef1, stores); hide('store-modal');
-        };
-        function showToast(msg, err=false) { const t=document.getElementById('toast'); t.textContent=msg; t.className=`fixed top-6 right-6 p-4 rounded text-white shadow-lg transform transition-all ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`; setTimeout(()=>t.classList.add('translate-x-full','opacity-0'), 2000); }
+            const data = new FormData(els.storeForm); const id = data.get('cnpj');
+            const clone = JSON.parse(JSON.stringify(allStoresData));
+            let idx = clone.findIndex(s => s && s.id === id);
+            const common = { analista: data.get('analista'), anjo: data.get('anjo'), uf: data.get('uf'), bandeira: data.get('bandeira'), ge: data.get('ge'), associado: data.get('associado'), nomeLoja: data.get('nome-loja') };
+            
+            if(document.getElementById('cnpj').readOnly) { if(idx > -1) clone[idx] = { ...clone[idx], ...common }; } 
+            else {
+                const pName = data.get('nome-projeto');
+                if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); return; }
+                const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
+                if(idx > -1) { clone[idx] = { ...clone[idx], ...common }; if(!clone[idx].projects) clone[idx].projects={}; clone[idx].projects[pName] = newProj; }
+                else { clone.push({ ...common, id: id, projects: { [pName]: newProj } }); }
+            }
+            saveToFirebase(clone); hide(els.storeModal);
+        });
+
+        function openObs(e) {
+            const {id, p} = e.currentTarget.dataset; const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            document.getElementById('obs-modal-textarea').value = row?.observation || '';
+            document.getElementById('save-obs-btn').onclick = () => { updateGeneric(id, p, (pr) => pr.observation = document.getElementById('obs-modal-textarea').value); hide(els.obsModal); };
+            show(els.obsModal);
+        }
+        function confirmDel(e) {
+            const {id, p} = e.currentTarget.dataset;
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                const clone = JSON.parse(JSON.stringify(allStoresData)); const idx = clone.findIndex(s => s && s.id === id);
+                if(idx > -1) { delete clone[idx].projects[p]; saveToFirebase(clone); } hide(els.deleteModal);
+            }; show(els.deleteModal);
+        }
+        function editStore(e) {
+            const d = allFlattenedData.find(r => r.id === e.currentTarget.dataset.id);
+            if(!d) return;
+            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
+            document.getElementById('cnpj').value = d.id; document.getElementById('cnpj').readOnly = true;
+            document.getElementById('store-modal-title').textContent = "Editar Loja"; document.getElementById('form-project-group').style.display = 'none';
+            document.getElementById('form-meta-group').style.display = 'none'; document.getElementById('form-observation-group').style.display = 'none';
+            document.getElementById('nome-projeto').required = false; show(els.storeModal);
+        }
+        function openChart(e) {
+            const {id, p} = e.currentTarget.dataset; currentChartRowData = allFlattenedData.find(r => r.id === id && r.projectName === p);
+            renderChart('number'); show(els.chartModal);
+        }
+        function renderChart(fmt) {
+            if(!currentChartRowData) return;
+            const ctx = document.getElementById('indicator-chart').getContext('2d');
+            if(currentChartInstance) currentChartInstance.destroy();
+            const data = indicatorMonths.map(m => Number(currentChartRowData.indicators?.[m.id]) || 0);
+            currentChartInstance = new Chart(ctx, {
+                type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Realizado', data, borderColor: '#FF5510', backgroundColor: 'rgba(255,85,16,0.1)', fill: true, tension: 0.1 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { annotation: { annotations: { line1: { type: 'line', yMin: Number(currentChartRowData.goal)||0, yMax: Number(currentChartRowData.goal)||0, borderColor: 'red', borderWidth: 2, borderDash: [5,5], label: { enabled: true, content: 'Meta: '+(Number(currentChartRowData.goal)||0) } } } } } }
+            });
+        }
+        
+        document.getElementById('generate-chart-btn').addEventListener('click', () => {
+             const proj = document.getElementById('chart-filter-project').value; const ge = document.getElementById('chart-filter-ge').value; const term = document.getElementById('chart-filter-cnpj-loja').value.toLowerCase();
+             if(!proj) return;
+             const rows = allFlattenedData.filter(r => r.projectName === proj && (!ge || r.ge === ge) && (!term || r.nomeLoja.toLowerCase().includes(term) || r.id.includes(term)));
+             const ctx = document.getElementById('consolidated-chart').getContext('2d');
+             if(consolidatedChartInstance) consolidatedChartInstance.destroy();
+             consolidatedChartInstance = new Chart(ctx, {
+                type: 'line', data: { labels: chartLabels, datasets: rows.map(r => ({ label: r.nomeLoja, data: indicatorMonths.map(m => Number(r.indicators?.[m.id])||0), borderColor: '#'+Math.floor(Math.random()*16777215).toString(16), tension: 0.1, fill: false })) },
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+             });
+        });
+
+        // Listeners UI Gerais
+        document.getElementById('open-modal-btn').onclick = () => { els.storeForm.reset(); document.getElementById('cnpj').readOnly = false; document.getElementById('store-modal-title').textContent = "Nova Loja"; document.getElementById('form-project-group').style.display = 'block'; document.getElementById('form-meta-group').style.display = 'block'; document.getElementById('form-observation-group').style.display = 'block'; document.getElementById('nome-projeto').required = true; show(els.storeModal); };
+        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.storeModal));
+        document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
+        ['cancel-obs-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
+        document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
+        document.getElementById('apply-filters-btn').onclick = applyFilters;
+        els.searchInput.addEventListener('input', applyFilters);
+        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
     </script>
 
     <script type="text/babel">
-        // Ícones
-        const IconBase=({children,size=20,className="",...props})=>(<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
-        const Rocket=(p)=><IconBase {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 2.75-.45 3 0L9 12z"/></IconBase>;
-        const Plus=(p)=><IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
-        const Check=(p)=><IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>;
-        const Hammer=(p)=><IconBase {...p}><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>;
-        const AlertTriangle=(p)=><IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>;
-        const MinusCircle=(p)=><IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>;
-        const CheckCircle2=(p)=><IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>;
-        const Users=(p)=><IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
-        const Store=(p)=><IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></IconBase>;
-        const Download=(p)=><IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
-        const Upload=(p)=><IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
+        // Ícones SVG
+        const IconBase = ({ children, size = 24, className = "", ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
+        const Target = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>);
+        const MinusCircle = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
+        const AlertTriangle = (p) => (<IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
+        const Hammer = (p) => (<IconBase {...p}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
+        const CheckCircle2 = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
+        const ArrowRight = (p) => (<IconBase {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>);
+        const BarChart3 = (p) => (<IconBase {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>);
+        const LayoutList = (p) => (<IconBase {...p}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></IconBase>);
+        const Grip = (p) => (<IconBase {...p}><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></IconBase>);
+        const Check = (p) => (<IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>);
+        const Trophy = (p) => (<IconBase {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>);
+        const Store = (p) => (<IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>);
+        const Users = (p) => (<IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>);
+        const Plus = (p) => (<IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>);
+        const Pencil = (p) => (<IconBase {...p}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
+        const Trash2 = (p) => (<IconBase {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
+        const XIcon = (p) => (<IconBase {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
+        const Save = (p) => (<IconBase {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
+        const Filter = (p) => (<IconBase {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>);
+        const Download = (p) => (<IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>);
+        const Upload = (p) => (<IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>);
 
-        const projectLabels = { mix: "Mix", precificacao: "Precif.", pbm: "PBM", pec: "PEC", setorizacao: "Setor.", marcasProprias: "M. Próprias", gc: "GC", delivery: "Delivery", inspire: "Inspire", dermaclub: "Derma", servicos: "Serviços", idoso: "Idoso", especiais: "Especiais", fideliza: "Fideliza" };
-
-        const initialDataRaw = [
-          { id: 1, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - MATRIZ", ge: "13", cnpj: "36.728.431/0001-16", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: true, delivery: false, inspire: false, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
-          { id: 2, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 02", ge: "13", cnpj: "36.728.431/0002-05", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
-          { id: 3, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 03", ge: "13", cnpj: "36.728.431/0003-88", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
-          { id: 4, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 04", ge: "13", cnpj: "36.728.431/0004-69", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
-          { id: 5, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - MATRIZ", ge: "625", cnpj: "22.053.641/0002-28", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 6, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - FILIAL 02", ge: "625", cnpj: "22.053.641/0003-09", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
-          { id: 7, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRIETO FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "39.659.264/0001-97", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 8, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRI FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "33.155.990/0001-96", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
-          { id: 9, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - LOJA 01", ge: "682", cnpj: "05.313.670/0003-01", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 10, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - FILIAL 01", ge: "682", cnpj: "05.313.670/0002-12", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 11, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA", ge: "368", cnpj: "34.565.893/0001-34", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 12, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA - FILIAL 01", ge: "368", cnpj: "34.565.893/0002-15", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 13, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "OLIVEIRA & IBANHEZ LTDA - MATRIZ", ge: "368", cnpj: "40.508.620/0001-69", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: false, idoso: true, especiais: false, fideliza: false } },
-          { id: 14, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "LLI COMERCIO DE MEDICAMENTOS - FILIAL 01", ge: "368", cnpj: "30.345.678/0001-XX", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 15, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA ULTRA POPULAR PEIXOTO", ge: "27", cnpj: "20.330.018/0001-69", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
-          { id: 16, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ULTRA POPULAR PRIMEIRO DE MARCO", ge: "27", cnpj: "44.396.290/0001-00", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: false, especiais: false, fideliza: false } },
-          { id: 17, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DESCONTO FACIL COMERCIO", ge: "27", cnpj: "29.802.416/0001-05", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
-          { id: 18, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA PANTANAL LTDA - MATRIZ", ge: "27", cnpj: "08.273.660/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 19, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ARAUJO & SILVA LTDA", ge: "27", cnpj: "18.528.172/0001-71", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
-          { id: 20, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "M F GURGEL ARAUJO - ME", ge: "27", cnpj: "23.585.408/0001-78", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: true, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
-          { id: 21, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J.C.C. MEDICAMENTOS LTDA-ME", ge: "27", cnpj: "08.383.511/0001-41", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
-          { id: 22, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J C ARAUJO LTDA - MATRIZ", ge: "27", cnpj: "27.202.935/0001-45", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
-          { id: 23, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA SAUDE TOTAL", ge: "27", cnpj: "12.345.678/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 24, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA BEM ESTAR", ge: "27", cnpj: "98.765.432/0001-10", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 25, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA VIDA NOVA", ge: "27", cnpj: "11.223.344/0001-55", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 26, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA POPULAR CENTRO", ge: "27", cnpj: "55.667.788/0001-99", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 27, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA NOVA ERA", ge: "27", cnpj: "99.887.766/0001-22", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 28, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA SAO JOAO", ge: "27", cnpj: "33.445.566/0001-77", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
-          { id: 29, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA CENTRAL", ge: "27", cnpj: "77.889.900/0001-33", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } }
+        const EXCEL_COLUMNS = [
+            { key: 'cnpj', label: 'CNPJ' }, { key: 'ge', label: 'GE' }, { key: 'associado', label: 'ASSOCIADO' }, { key: 'loja', label: 'NOME LOJA' },
+            { key: 'mix', label: 'MIX DE PRODUTOS' }, { key: 'precificacao', label: 'PRECIFICAÇÃO' }, { key: 'pbm', label: 'PBM' }, { key: 'pec', label: 'PEC' },
+            { key: 'setorizacao', label: 'SETORIZAÇÃO' }, { key: 'marcasProprias', label: 'MARCAS PROPRIAS' }, { key: 'gc', label: 'GC (FARMACINHA)' },
+            { key: 'delivery', label: 'DELIVERY' }, { key: 'inspire', label: 'INSPIRE +' }, { key: 'dermaclub', label: 'DERMACLUB' },
+            { key: 'servicos', label: 'SERVIÇOS FARM.' }, { key: 'idoso', label: 'CAMPANHA IDOSO' }, { key: 'especiais', label: 'MEDICAMENTOS ESPECIAIS' }, { key: 'fideliza', label: 'FIDELIZA MAIS' }
         ];
 
-        function PilotPanel() {
-            const [associados, setAssociados] = React.useState([]);
-            const [isModalOpen, setIsModalOpen] = React.useState(false);
-            const [isLoading, setIsLoading] = React.useState(true);
-            
-            // --- CONEXÃO FIREBASE (PILOTO) ---
-            React.useEffect(() => {
-                const db = window.firebaseDB;
-                const pilotRef = window.firebaseRef(db, 'painel_piloto_v1');
-                
-                window.firebaseOnValue(pilotRef, (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        const parsedData = Array.isArray(data) ? data : Object.values(data);
-                        setAssociados(parsedData);
-                        setIsLoading(false);
-                    } else {
-                        // Se vazio, carrega 29 lojas
-                        const processedInitial = initialDataRaw.map(item => {
-                            const newProjetos = {};
-                            Object.keys(item.projetos).forEach(key => {
-                                const val = item.projetos[key];
-                                if (val === true) newProjetos[key] = 'priority_todo';
-                                else newProjetos[key] = 'low_priority';
-                            });
-                            return { ...item, projetos: newProjetos };
-                        });
-                        window.firebaseSet(pilotRef, processedInitial);
-                        setAssociados(processedInitial);
-                        setIsLoading(false);
-                    }
-                });
-            }, []);
+        const projectLabels = { mix: "Mix de Produtos", precificacao: "Precificação", pbm: "PBM", pec: "PEC", setorizacao: "Setorização", marcasProprias: "Marcas Próprias", gc: "Gerenc. Categoria", delivery: "Delivery", inspire: "Inspire +", dermaclub: "DermaClub", servicos: "Serviços Farm.", idoso: "Campanha Idoso", especiais: "Med. Especiais", fideliza: "Fideliza Mais" };
+        const STATUS_MAP = { 'low_priority': 'BAIXA PRIORIDADE', 'priority_todo': 'A FAZER', 'priority_doing': 'TRABALHANDO', 'priority_done': 'FINALIZADO' };
+        const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done', 'BAIXA': 'low_priority', 'PENDENTE': 'priority_todo', 'EM ANDAMENTO': 'priority_doing', 'CONCLUIDO': 'priority_done' };
 
-            const toggleStatus = (id, key) => {
-                const updated = associados.map(item => {
-                    if(item.id === id) {
-                        const curr = item.projetos[key];
-                        let next = 'low_priority';
-                        if (curr === 'low_priority') next = 'priority_todo';
-                        else if (curr === 'priority_todo') next = 'priority_doing';
-                        else if (curr === 'priority_doing') next = 'priority_done';
-                        else if (curr === 'priority_done') next = 'low_priority';
-                        return { ...item, projetos: { ...item.projetos, [key]: next } };
-                    }
-                    return item;
-                });
-                const db = window.firebaseDB;
-                window.firebaseSet(window.firebaseRef(db, 'painel_piloto_v1'), updated);
-            };
+        // Dados Iniciais (Para popular o Firebase se estiver vazio)
+        const initialDataRaw = [
+          { id: 1, associado: "EXEMPLO INICIAL", loja: "LOJA MODELO", ge: "00", cnpj: "00.000.000/0001-00", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: true, delivery: false, inspire: false, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } }
+        ];
 
-            const calcProgress = (projetos) => {
-                const vals = Object.values(projetos);
-                const total = vals.length;
-                const done = vals.filter(v => v === 'priority_done').length;
-                return total > 0 ? Math.round((done / total) * 100) : 0;
-            }
+        const ProjectBadge = ({ status, label, onClick }) => {
+          let bgColor = "", icon = null;
+          if (status === 'low_priority') { bgColor = "bg-slate-50 text-slate-400 border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 hover:bg-slate-100 cursor-pointer"; icon = <MinusCircle size={12} />; }
+          else if (status === 'priority_todo') { bgColor = "bg-red-50 text-red-600 border-red-200 shadow-sm cursor-pointer hover:bg-red-100 font-medium"; icon = <AlertTriangle size={14} className="animate-pulse" />; }
+          else if (status === 'priority_doing') { bgColor = "bg-orange-50 text-[#FF5510] border-orange-200 shadow-sm cursor-pointer hover:bg-orange-100 font-medium"; icon = <Hammer size={14} />; }
+          else if (status === 'priority_done') { bgColor = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm cursor-pointer hover:bg-emerald-100 font-medium"; icon = <CheckCircle2 size={14} className="text-emerald-500" />; }
+          
+          return ( <div onClick={onClick} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs transition-all duration-200 group relative select-none ${bgColor}`} title="Clique para alterar o status"><div className={`transition-transform duration-300 ${status === 'priority_done' ? 'scale-100' : ''}`}>{icon}</div><span className="truncate flex-1">{label}</span></div> );
+        };
 
-            // Função de emergência
-            const resetData = () => {
-                if(confirm("Restaurar as 29 lojas originais?")) {
-                    const processedInitial = initialDataRaw.map(item => {
+        const ProgressBar = ({ done, totalPriority }) => {
+          const percentage = totalPriority > 0 ? Math.round((done / totalPriority) * 100) : 0;
+          return ( <div className="w-full"><div className="flex justify-between text-xs mb-1"><span className="font-semibold text-slate-700">{done} de {totalPriority} Resolvidos</span><span className={`font-bold ${percentage === 100 ? 'text-emerald-600' : 'text-[#FF5510]'}`}>{percentage}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-1000 ease-out shadow-sm relative overflow-hidden ${percentage === 100 ? 'bg-emerald-500' : 'bg-[#FF5510]'}`} style={{ width: `${percentage}%` }}></div></div></div> );
+        };
+
+        const StoreFormModal = ({ isOpen, onClose, onSave, editingData }) => {
+            const [formData, setFormData] = React.useState({ associado: '', loja: '', ge: '', cnpj: '' });
+            React.useEffect(() => { if (isOpen && editingData) { setFormData({ associado: editingData.associado, loja: editingData.loja, ge: editingData.ge, cnpj: editingData.cnpj }); } else if (isOpen) { setFormData({ associado: '', loja: '', ge: '', cnpj: '' }); } }, [isOpen, editingData]);
+            if (!isOpen) return null;
+            const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+            return ( <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}><div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"><div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50"><h3 className="font-bold text-lg text-slate-800">{editingData ? 'Editar Loja' : 'Adicionar Loja'}</h3><button onClick={onClose}><XIcon size={20} /></button></div><form onSubmit={(e)=>{e.preventDefault(); onSave(formData);}} className="p-6 space-y-4"><div><label className="block text-sm font-medium mb-1">Associado</label><input type="text" name="associado" required className="w-full px-3 py-2 border rounded-lg" value={formData.associado} onChange={handleChange} /></div><div><label className="block text-sm font-medium mb-1">Loja</label><input type="text" name="loja" required className="w-full px-3 py-2 border rounded-lg" value={formData.loja} onChange={handleChange} /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-1">G.E</label><input type="text" name="ge" className="w-full px-3 py-2 border rounded-lg" value={formData.ge} onChange={handleChange} /></div><div><label className="block text-sm font-medium mb-1">CNPJ</label><input type="text" name="cnpj" className="w-full px-3 py-2 border rounded-lg" value={formData.cnpj} onChange={handleChange} /></div></div><div className="pt-4 flex gap-3"><button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg">Cancelar</button><button type="submit" className="flex-1 px-4 py-2 bg-[#FF5510] text-white rounded-lg">Salvar</button></div></form></div></div> );
+        };
+
+        function ContingencyPlan() {
+          const [viewMode, setViewMode] = React.useState('pipeline');
+          const [associados, setAssociados] = React.useState([]);
+          const [isModalOpen, setIsModalOpen] = React.useState(false);
+          const [editingId, setEditingId] = React.useState(null);
+          const [selectedProject, setSelectedProject] = React.useState('mix');
+          const fileInputRef = React.useRef(null);
+          
+          // CONEXÃO FIREBASE (PROJETO PILOTO)
+          const dbRefPilot = window.firebaseRef(window.firebaseDB, 'projeto_piloto_v1');
+
+          React.useEffect(() => {
+            window.firebaseOnValue(dbRefPilot, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    setAssociados(data);
+                } else {
+                    // Popular dados iniciais se vazio
+                    const processedData = initialDataRaw.map(item => {
                         const newProjetos = {};
                         Object.keys(item.projetos).forEach(key => {
                             const val = item.projetos[key];
-                            if (val === true) newProjetos[key] = 'priority_todo';
-                            else newProjetos[key] = 'low_priority';
+                            newProjetos[key] = (val === true || val === 'pending') ? 'priority_todo' : 'low_priority';
                         });
                         return { ...item, projetos: newProjetos };
                     });
-                    const db = window.firebaseDB;
-                    window.firebaseSet(window.firebaseRef(db, 'painel_piloto_v1'), processedInitial);
+                    window.firebaseSet(dbRefPilot, processedData);
+                    setAssociados(processedData);
                 }
-            }
+            });
+          }, []);
 
-            return (
-                <div className="p-8 max-w-[1800px] mx-auto">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
-                        <div className="relative z-10 flex justify-between items-center">
-                            <div><h2 className="text-3xl font-extrabold mb-2 flex items-center gap-3"><Rocket /> Painel Piloto - Centro Oeste</h2><p className="opacity-90">{associados.length} Lojas Participantes</p></div>
-                            <div className="flex gap-2">
-                                <button onClick={resetData} className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs font-bold transition">Restaurar Dados Padrão</button>
-                                <button onClick={() => setIsModalOpen(true)} className="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl font-bold flex items-center gap-2 backdrop-blur-sm transition-all"><Plus /> Adicionar</button>
-                            </div>
-                        </div>
+          const updateFirebase = (newData) => {
+             window.firebaseSet(dbRefPilot, newData);
+          };
+
+          const handleAddNew = () => { setEditingId(null); setIsModalOpen(true); };
+          const handleEdit = (id) => { setEditingId(id); setIsModalOpen(true); };
+          const handleDelete = (id) => { 
+             if (confirm('Excluir loja?')) {
+                 const newData = associados.filter(item => item.id !== id);
+                 updateFirebase(newData);
+             } 
+          };
+          const handleSaveForm = (formData) => {
+              let newData;
+              if (editingId) newData = associados.map(item => item.id === editingId ? { ...item, ...formData } : item);
+              else {
+                  const newId = Math.max(...associados.map(a => a.id), 0) + 1;
+                  const emptyProjects = {}; Object.keys(projectLabels).forEach(key => emptyProjects[key] = 'low_priority');
+                  newData = [{ id: newId, ...formData, projetos: emptyProjects }, ...associados];
+              }
+              updateFirebase(newData);
+              setIsModalOpen(false);
+          };
+
+          const handleExportXLSX = () => {
+              const exportData = associados.map(item => {
+                  const row = { CNPJ: item.cnpj||'', GE: item.ge||'', ASSOCIADO: item.associado||'', "NOME LOJA": item.loja||'' };
+                  EXCEL_COLUMNS.slice(4).forEach(col => row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE');
+                  return row;
+              });
+              const wb = XLSX.utils.book_new(); const ws = XLSX.utils.json_to_sheet(exportData);
+              const wscols = Object.keys(exportData[0]||{}).map(k => ({ wch: k.length + 5 })); ws['!cols'] = wscols;
+              XLSX.utils.book_append_sheet(wb, ws, "Contingencia"); XLSX.writeFile(wb, "Piloto_CO.xlsx");
+          };
+
+          const handleImportClick = () => fileInputRef.current.click();
+          const handleFileChange = (e) => {
+              const file = e.target.files[0]; if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                  const wb = XLSX.read(evt.target.result, { type: 'binary' }); const ws = wb.Sheets[wb.SheetNames[0]]; const data = XLSX.utils.sheet_to_json(ws);
+                  if (data.length > 0) {
+                      let currentId = Math.max(...associados.map(a => a.id), 0) + 1;
+                      const newEntries = data.map(row => {
+                          const projetos = {};
+                          Object.keys(projectLabels).forEach(key => {
+                              const label = EXCEL_COLUMNS.find(c => c.key === key)?.label; const val = row[label] ? row[label].toString().toUpperCase().trim() : '';
+                              projetos[key] = STATUS_MAP_REVERSE[val] || 'low_priority';
+                          });
+                          return { id: currentId++, associado: row['ASSOCIADO']||'', loja: row['NOME LOJA']||'', ge: row['GE']?row['GE'].toString():'', cnpj: row['CNPJ']?row['CNPJ'].toString():'', projetos };
+                      });
+                      updateFirebase([...associados, ...newEntries]);
+                      alert(`${newEntries.length} lojas importadas!`);
+                  }
+              };
+              reader.readAsBinaryString(file); e.target.value = null;
+          };
+
+          const togglePriorityStatus = (id, projectKey) => {
+            const newData = associados.map(item => {
+                if (item.id === id) {
+                    const curr = item.projetos[projectKey]; let next = 'low_priority';
+                    if (curr === 'low_priority') next = 'priority_todo'; else if (curr === 'priority_todo') next = 'priority_doing'; else if (curr === 'priority_doing') next = 'priority_done'; else if (curr === 'priority_done') next = 'low_priority';
+                    return { ...item, projetos: { ...item.projetos, [projectKey]: next } };
+                }
+                return item;
+            });
+            updateFirebase(newData);
+          };
+
+          const calculateStats = (projetos) => {
+            const vals = Object.values(projetos);
+            return { totalPriority: vals.filter(v => v !== 'low_priority').length, doneCount: vals.filter(v => v === 'priority_done').length, todoCount: vals.filter(v => v === 'priority_todo').length, doingCount: vals.filter(v => v === 'priority_doing').length };
+          };
+
+          const allStats = associados.map(a => calculateStats(a.projetos));
+          const totalPriorityAll = allStats.reduce((acc, curr) => acc + curr.totalPriority, 0);
+          const totalDoneAll = allStats.reduce((acc, curr) => acc + curr.doneCount, 0);
+          const avgProgress = totalPriorityAll > 0 ? (totalDoneAll / totalPriorityAll) * 100 : 0;
+
+          const todoList = associados.filter(a => a.projetos[selectedProject] === 'priority_todo');
+          const doingList = associados.filter(a => a.projetos[selectedProject] === 'priority_doing');
+          const doneList = associados.filter(a => a.projetos[selectedProject] === 'priority_done');
+
+          return (
+            <div className="pb-20">
+              <div className="relative overflow-hidden mb-8 shadow-lg rounded-xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5510] to-[#FF8040]"></div>
+                <div className="relative p-8 flex justify-between items-center">
+                  <div className="text-white">
+                    <h1 className="text-3xl font-extrabold">Piloto Centro-Oeste</h1>
+                    <p className="text-white/90">Plano de Contingência e Gestão Estratégica</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleExportXLSX} className="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg flex gap-2"><Download size={20} /></button>
+                    <button onClick={handleImportClick} className="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg flex gap-2"><Upload size={20} /></button>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                    <button onClick={handleAddNew} className="bg-white text-[#FF5510] font-bold py-2 px-4 rounded-lg flex gap-2 hover:bg-orange-50"><Plus size={20} /> Adicionar</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600"><AlertTriangle size={24} /></div><div><div className="text-slate-500 text-sm">A Fazer</div><div className="text-2xl font-bold">{allStats.reduce((a,c)=>a+c.todoCount,0)}</div></div></div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-[#FF5510]"><Hammer size={24} /></div><div><div className="text-slate-500 text-sm">Em Trabalho</div><div className="text-2xl font-bold">{allStats.reduce((a,c)=>a+c.doingCount,0)}</div></div></div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><CheckCircle2 size={24} /></div><div><div className="text-slate-500 text-sm">Finalizados</div><div className="text-2xl font-bold">{totalDoneAll}</div></div></div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><Trophy size={24} /></div><div className="flex-1"><div className="text-slate-500 text-sm">Progresso</div><div className="text-lg font-bold">{avgProgress.toFixed(0)}%</div><div className="w-full bg-gray-100 h-1.5 rounded-full mt-1"><div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${avgProgress}%` }}></div></div></div></div>
+              </div>
+
+              <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit border border-slate-200 shadow-sm">
+                  <button onClick={() => setViewMode('pipeline')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'pipeline' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><LayoutList size={18} /> Esteira</button>
+                  <button onClick={() => setViewMode('grid')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'grid' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><Grip size={18} /> Batalha Naval</button>
+                  <button onClick={() => setViewMode('project_report')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'project_report' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><Filter size={18} /> Relatório</button>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+                  {viewMode === 'pipeline' && (
+                    <div className="p-6 grid gap-6">
+                        {associados.map((item) => {
+                            const stats = calculateStats(item.projetos);
+                            return (
+                                <div key={item.id} className="bg-white border border-slate-100 rounded-xl p-6 hover:border-orange-200 hover:shadow-lg transition-all group relative">
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleEdit(item.id)} className="p-2 bg-blue-50 text-blue-600 rounded"><Pencil size={16} /></button><button onClick={() => handleDelete(item.id)} className="p-2 bg-red-50 text-red-600 rounded"><Trash2 size={16} /></button></div>
+                                    <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">{item.associado.charAt(0)}</div><div><h4 className="font-bold text-slate-800">{item.associado}</h4><div className="text-sm text-slate-500">{item.loja} <span className="text-xs text-slate-300">| GE: {item.ge}</span></div></div></div><div className="w-1/3"><ProgressBar done={stats.doneCount} totalPriority={stats.totalPriority} /></div></div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">{Object.entries(item.projetos).map(([key, status]) => (<ProjectBadge key={key} label={projectLabels[key]} status={status} onClick={() => togglePriorityStatus(item.id, key)} />))}</div>
+                                </div>
+                            );
+                        })}
                     </div>
+                  )}
 
-                    <div className="bg-white rounded-xl shadow border border-gray-200 overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-sm">
-                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
-                                <tr>
-                                    <th className="p-4 min-w-[250px] sticky left-0 bg-gray-50 z-20 shadow-md">Associado / Loja</th>
-                                    <th className="p-4 text-center">Progresso</th>
-                                    {Object.entries(projectLabels).map(([k,v]) => (
-                                        <th key={k} className="p-2 text-center min-w-[80px]"><div className="flex flex-col items-center gap-1"><span className="text-xs uppercase">{v}</span></div></th>
-                                    ))}
-                                </tr>
+                  {viewMode === 'grid' && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-slate-50 text-slate-600 font-semibold">
+                                <tr><th className="px-4 py-5 border-b text-center">Ações</th><th className="px-6 py-5 border-b">Loja</th>{Object.values(projectLabels).map((label) => (<th key={label} className="px-1 py-4 border-b text-center align-bottom"><div className="h-32 flex items-end justify-center pb-2"><span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }} className="text-xs uppercase tracking-wider">{label}</span></div></th>))}<th className="px-4 py-5 text-center border-b">Status</th></tr>
                             </thead>
-                            <tbody>
-                                {isLoading ? <tr><td colSpan="20" className="p-8 text-center text-gray-500">Carregando lojas...</td></tr> : 
-                                 associados.length === 0 ? <tr><td colSpan="20" className="p-8 text-center text-gray-500">Nenhuma loja. Clique em Restaurar Padrão.</td></tr> :
-                                 associados.map(item => {
-                                    const progress = calcProgress(item.projetos);
+                            <tbody className="divide-y divide-slate-100">
+                                {associados.map((item) => {
+                                    const stats = calculateStats(item.projetos);
                                     return (
-                                    <tr key={item.id} className="border-b hover:bg-blue-50/30 transition-colors group">
-                                        <td className="p-4 sticky left-0 bg-white group-hover:bg-blue-50/30 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                            <div className="font-bold text-gray-800">{item.associado}</div>
-                                            <div className="text-xs text-gray-500">{item.loja}</div>
-                                            <div className="text-[10px] text-gray-400 mt-1">CNPJ: {item.cnpj} | GE: {item.ge}</div>
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <div className="w-16 bg-gray-200 rounded-full h-1.5"><div className="bg-blue-600 h-1.5 rounded-full" style={{width: `${progress}%`}}></div></div>
-                                                <span className="text-xs font-bold text-blue-600">{progress}%</span>
-                                            </div>
-                                        </td>
-                                        {Object.entries(projectLabels).map(([key, label]) => {
-                                            const status = item.projetos[key] || 'low_priority';
-                                            return (
-                                                <td key={key} className="p-2 text-center cursor-pointer border-l border-gray-50" onClick={() => toggleStatus(item.id, key)}>
-                                                    <div className="flex justify-center transition-transform active:scale-90 hover:scale-110">
-                                                        {status === 'priority_done' ? <div className="text-emerald-600 bg-emerald-100 p-1.5 rounded-lg"><Check size={16} strokeWidth={3}/></div> :
-                                                         status === 'priority_doing' ? <div className="text-orange-500 bg-orange-100 p-1.5 rounded-lg border border-orange-200"><Hammer size={16}/></div> :
-                                                         status === 'priority_todo' ? <div className="text-red-500 bg-red-100 p-1.5 rounded-lg border border-red-200"><AlertTriangle size={16}/></div> :
-                                                         <div className="text-gray-300 hover:text-gray-400"><MinusCircle size={16}/></div>}
-                                                    </div>
+                                        <tr key={item.id} className="hover:bg-orange-50/30">
+                                            <td className="px-4 py-4 text-center"><div className="flex gap-2 justify-center"><button onClick={() => handleEdit(item.id)} className="text-blue-500"><Pencil size={16}/></button><button onClick={() => handleDelete(item.id)} className="text-red-400"><Trash2 size={16}/></button></div></td>
+                                            <td className="px-6 py-4"><div className="font-bold text-slate-700">{item.associado}</div><div className="text-xs text-slate-400">{item.loja}</div></td>
+                                            {Object.entries(item.projetos).map(([key, status]) => (
+                                                <td key={key} onClick={() => togglePriorityStatus(item.id, key)} className="px-2 py-3 text-center border-r border-slate-50/50 cursor-pointer hover:bg-white">
+                                                    <div className="flex justify-center">{status === 'priority_done' ? <div className="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center"><Check size={16} /></div> : status === 'priority_doing' ? <div className="w-8 h-8 rounded bg-orange-100 text-[#FF5510] flex items-center justify-center"><Hammer size={16} /></div> : status === 'priority_todo' ? <div className="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center"><AlertTriangle size={16} /></div> : <div className="w-8 h-8 rounded bg-slate-50 text-slate-300 flex items-center justify-center"><MinusCircle size={12} /></div>}</div>
                                                 </td>
-                                            );
-                                        })}
-                                    </tr>
-                                )})}
+                                            ))}
+                                            <td className="px-4 py-4 text-center font-bold text-[#FF5510]">{stats.doneCount}/{stats.totalPriority}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            );
+                  )}
+
+                  {viewMode === 'project_report' && (
+                    <div className="p-8">
+                        <div className="flex items-center justify-between mb-8"><h3 className="text-xl font-bold flex items-center gap-3"><div className="p-2 bg-orange-100 rounded text-[#FF5510]"><Filter size={20}/></div> Filtro por Projeto</h3><select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="p-3 bg-slate-50 border rounded-xl">{Object.entries(projectLabels).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}</select></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-red-50/50 rounded-2xl border border-red-100 h-[600px] flex flex-col"><div className="bg-red-100/80 px-6 py-4 flex justify-between font-bold text-red-800"><div>A Fazer</div><span>{todoList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{todoList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="text-red-500"><ArrowRight size={16}/></button></div>))}</div></div>
+                            <div className="bg-orange-50/50 rounded-2xl border border-orange-100 h-[600px] flex flex-col"><div className="bg-orange-100/80 px-6 py-4 flex justify-between font-bold text-orange-800"><div>Trabalhando</div><span>{doingList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{doingList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="text-orange-500"><Check size={16}/></button></div>))}</div></div>
+                            <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 h-[600px] flex flex-col"><div className="bg-emerald-100/80 px-6 py-4 flex justify-between font-bold text-emerald-800"><div>Finalizado</div><span>{doneList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{doneList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><div className="text-emerald-500"><Check size={16}/></div></div>))}</div></div>
+                        </div>
+                    </div>
+                  )}
+              </div>
+              <StoreFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveForm} editingData={editingId ? associados.find(a => a.id === editingId) : null} />
+            </div>
+          );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('react-pilot-root'));
-        root.render(<PilotPanel />);
+        const root = ReactDOM.createRoot(document.getElementById('react-root'));
+        root.render(<ContingencyPlan />);
     </script>
 </body>
 </html>
