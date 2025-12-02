@@ -3,45 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Integrado Farmarcas - Sincronizado</title>
+    <title>Painel Integrado Farmarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .nav-btn { padding: 0.75rem 1.5rem; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.3s; cursor: pointer; color: #64748b; }
-        .nav-btn:hover { color: #FF5510; background-color: #fff1eb; }
-        .nav-btn.active { border-bottom-color: #FF5510; color: #FF5510; background-color: #fff; }
-        .hidden-view { display: none !important; }
-        /* Utilitários Dashboard 2 */
-        .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500; appearance: none; -webkit-appearance: none; background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px; }
+        /* RESET E NAVEGAÇÃO */
+        body { margin: 0; padding: 0; background-color: #f8fafc; }
+        
+        .top-nav {
+            background: #1e293b; color: white; padding: 0 1.5rem; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .nav-brand { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; display: flex; gap: 10px; align-items: center; }
+        .nav-tabs { display: flex; gap: 4px; height: 100%; align-items: flex-end; }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem; background: transparent; border: none; color: #94a3b8;
+            font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer;
+            border-bottom: 3px solid transparent; transition: all 0.2s; height: 100%;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+        .tab-btn.active { color: #FF5510; border-bottom-color: #FF5510; background: rgba(255, 85, 16, 0.05); }
+
+        /* Controles de Exibição */
+        .panel-section { display: none; width: 100%; min-height: calc(100vh - 64px); }
+        .panel-section.active { display: block; }
+
+        /* --- ESTILOS DO DASHBOARD 1 (LEGACY) --- */
+        #legacy-panel { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
+        .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500; appearance: none; background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px; }
         .status-default { background-color: #f3f4f6; color: #4b5563; }
         .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
         .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
         .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
         .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
-        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; }
         .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        .obs-filled { color: #3b82f6; }
+
+        /* --- ESTILOS DO DASHBOARD 2 (REACT) --- */
+        #react-pilot-root { font-family: 'Inter', sans-serif; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        
+        /* Scrollbar Global */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        #toast { transition: transform 0.3s, opacity 0.3s; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <i class="fa-solid fa-layer-group text-[#FF5510]"></i>
+            <span>Farmarcas</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('legacy-panel', this)">
+                <i class="fa-solid fa-chart-line"></i> Dashboard Geral
+            </button>
+            <button class="tab-btn" onclick="switchTab('react-panel', this)">
+                <i class="fa-solid fa-rocket"></i> Projeto Piloto
+            </button>
+        </div>
+    </nav>
+
+    <div id="legacy-panel" class="panel-section active">
+        
+        <aside id="filter-sidebar" class="fixed top-[64px] left-0 z-30 w-72 h-[calc(100vh-64px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
+            <div class="space-y-4 overflow-y-auto h-[calc(100vh-200px)] pr-2">
+                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Loja/CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Buscar..."></div>
+            </div>
+            <div class="absolute bottom-6 left-6 right-6 space-y-3">
+                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
+                <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar</button>
+            </div>
+        </aside>
+
+        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
+            <header class="mb-6">
+                <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
+                    <div class="flex items-center"><button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button><h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard de Projetos</h1></div>
+                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow"><i class="fa-solid fa-plus"></i><span>Inserir Loja</span></button>
+                </nav>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-sm font-medium text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-sm font-medium text-gray-500 uppercase">Pend. Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                </div>
+            </header>
+
+            <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                    <div><label class="text-xs text-gray-500">Projeto</label><select id="chart-filter-project" class="w-full rounded border-gray-300"></select></div>
+                    <div><label class="text-xs text-gray-500">GE</label><select id="chart-filter-ge" class="w-full rounded border-gray-300"><option value="">Todos</option></select></div>
+                    <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 rounded font-semibold hover:bg-[#E04A0E]">Gerar</button>
+                </div>
+                <div class="relative h-72"><canvas id="consolidated-chart"></canvas></div>
+            </section>
+
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="p-4 border-b"><input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]"></div>
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50 sticky-header">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-bold text-gray-600">Loja</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-600">CNPJ</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-600">Projeto</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Status</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Meta</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ago/25</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Set/25</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Out/25</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-600">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="10" class="text-center p-8 text-gray-500">Carregando Firebase...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="react-panel" class="panel-section">
+        <div id="react-pilot-root"></div>
+    </div>
+
+    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
+    
+    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b flex justify-between"><h2 id="store-modal-title" class="font-bold text-lg">Dados Loja</h2><button id="close-modal-btn"><i class="fa-solid fa-times"></i></button></div>
+            <form id="store-form" class="p-6 overflow-y-auto space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" name="nome-loja" required placeholder="Nome Loja" class="border p-2 rounded">
+                    <input type="text" id="cnpj" name="cnpj" required placeholder="CNPJ" class="border p-2 rounded">
+                    <input type="text" name="ge" placeholder="GE" class="border p-2 rounded">
+                    <input type="text" name="analista" placeholder="Analista" class="border p-2 rounded">
+                    <input type="text" name="associado" placeholder="Associado" class="border p-2 rounded">
+                    <input type="text" name="uf" placeholder="UF" class="border p-2 rounded">
+                </div>
+                <div id="create-only-fields" class="space-y-4 border-t pt-4">
+                    <select id="nome-projeto" name="nome-projeto" class="w-full border p-2 rounded"><option value="">Selecione Projeto</option></select>
+                    <input type="number" name="meta" placeholder="Meta" class="w-full border p-2 rounded">
+                    <textarea name="observation" placeholder="Obs" class="w-full border p-2 rounded"></textarea>
+                </div>
+                <button type="submit" id="save-store-btn" class="w-full bg-[#FF5510] text-white py-2 rounded font-bold">Salvar</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="chart-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-4 rounded w-3/4"><canvas id="indicator-chart"></canvas><button id="close-chart-modal-btn" class="mt-4 bg-gray-200 p-2 rounded">Fechar</button></div></div>
+    <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-6 rounded"><p>Confirmar exclusão?</p><div class="flex gap-2 mt-4"><button id="confirm-delete-btn" class="bg-red-500 text-white p-2 rounded">Sim</button><button id="cancel-delete-btn" class="bg-gray-200 p-2 rounded">Não</button></div></div></div>
+
+    <script>
+        function switchTab(panelId, btn) {
+            document.querySelectorAll('.panel-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(panelId).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // SUAS CHAVES FIREBASE (NÃO APAGUE)
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -54,417 +207,302 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        // Expor para o escopo global (para o React e Vanilla JS acessarem)
-        window.FB_DB = db;
-        window.FB_REF = ref;
-        window.FB_SET = set;
-        window.FB_ONVALUE = onValue;
-
-        // Disparar evento para avisar o React que o Firebase está pronto
-        window.dispatchEvent(new Event('firebase-ready'));
-    </script>
-
-    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-[#FF5510] rounded-lg flex items-center justify-center text-white font-bold"><i class="fa-solid fa-layer-group"></i></div>
-                        <span class="font-bold text-xl tracking-tight text-slate-800">Sistema Integrado</span>
-                    </div>
-                    <div class="hidden md:flex ml-10 space-x-1">
-                        <button id="nav-contingencia" class="nav-btn active" onclick="switchTab('contingencia')">Painel de Contingência (Firebase)</button>
-                        <button id="nav-projetos" class="nav-btn" onclick="switchTab('projetos')">Dashboard Projetos (Firebase)</button>
-                    </div>
-                </div>
-                <div id="sync-status" class="flex items-center text-xs text-green-600 font-bold px-3"><i class="fa-solid fa-circle text-[8px] mr-2"></i>Conectado</div>
-            </div>
-        </div>
-    </nav>
-
-    <div id="view-contingencia" class="view-section">
-        <div id="root"></div>
-    </div>
-
-    <div id="view-projetos" class="view-section hidden-view">
-        <aside id="filter-sidebar" class="fixed top-16 left-0 z-30 w-72 h-[calc(100vh-64px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto border-r border-slate-200">
-            <h3 class="text-xl font-extrabold text-gray-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-filter text-[#FF5510]"></i> Filtros</h3>
-            <div class="space-y-4 pr-2">
-                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Loja, CNPJ..."></div>
-            </div>
-            <div class="mt-6 space-y-3">
-                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E] transition shadow-sm">Aplicar</button>
-                <button id="clear-filters-btn" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Limpar</button>
-            </div>
-        </aside>
-
-        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6 min-h-screen bg-gray-50/50">
-            <header class="mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
-                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow-sm"><i class="fa-solid fa-plus"></i><span>Nova Loja</span></button>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-black"><h4 class="text-xs font-bold text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendente</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Finalizado</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                </div>
-            </header>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky-header">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="toast" class="fixed top-20 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-[60]">Msg</div>
-    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden modal-overlay">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <header class="p-6 border-b bg-gray-50 flex justify-between"><h2 class="text-xl font-bold">Gerenciar Loja</h2><button id="close-modal-btn" class="text-gray-400"><i class="fa-solid fa-times"></i></button></header>
-            <form id="store-form" class="p-6 overflow-y-auto space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">Analista</label><input type="text" name="analista" class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">GE</label><input type="text" name="ge" class="w-full border rounded p-2"></div>
-                </div>
-                <div><label class="block text-sm font-medium">Projeto</label><select id="nome-projeto" name="nome-projeto" required class="w-full border rounded p-2 bg-white"></select></div>
-                <div><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="w-full border rounded p-2"></div>
-            </form>
-            <footer class="p-6 border-t bg-gray-50 flex justify-end"><button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white px-5 py-2 rounded-lg">Salvar</button></footer>
-        </div>
-    </div>
-
-    <script>
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`nav-${tab}`).classList.add('active');
-            document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden-view'));
-            document.getElementById(`view-${tab}`).classList.remove('hidden-view');
-        }
-    </script>
-
-    <script type="text/babel">
-        // Ícones Simplificados
-        const IconBase = ({ children, size=18, className="", ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
-        const AlertTriangle = (props) => (<IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
-        const Hammer = (props) => (<IconBase {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
-        const CheckCircle2 = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
-        const MinusCircle = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
-        const Save = (props) => (<IconBase {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
-        const XIcon = (props) => (<IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
-        const Pencil = (props) => (<IconBase {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
-        const Trash2 = (props) => (<IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
-
-        const projectLabels = { mix: "Mix", precificacao: "Preço", pbm: "PBM", pec: "PEC", setorizacao: "Setor.", marcasProprias: "Marcas", gc: "GC", delivery: "Deliv.", inspire: "Inspire", dermaclub: "Derma", servicos: "Serv.", idoso: "Idoso", especiais: "Espec.", fideliza: "Fidel." };
         
-        function ContingencyPlan() {
-            const [associados, setAssociados] = React.useState([]);
-            const [isModalOpen, setIsModalOpen] = React.useState(false);
-            const [editingId, setEditingId] = React.useState(null);
-            
-            // --- CONEXÃO FIREBASE PARA O REACT ---
-            React.useEffect(() => {
-                const initFirebase = () => {
-                    if (window.FB_DB) {
-                        const dbRef = window.FB_REF(window.FB_DB, 'painel_contingencia_v1');
-                        window.FB_ONVALUE(dbRef, (snapshot) => {
-                            const data = snapshot.val();
-                            if (data) {
-                                // Converter objeto para array se necessário, ou usar direto se for array
-                                const formatted = Array.isArray(data) ? data : Object.values(data);
-                                setAssociados(formatted.filter(item => item !== null)); // Remove nulos
-                            } else {
-                                setAssociados([]);
-                            }
-                        });
-                    }
-                };
+        // Expor Firebase para o React
+        window.firebaseDB = db;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseOnValue = onValue;
 
-                // Tenta iniciar se já estiver pronto ou aguarda evento
-                if(window.FB_DB) initFirebase();
-                else window.addEventListener('firebase-ready', initFirebase);
-                
-                return () => window.removeEventListener('firebase-ready', initFirebase);
-            }, []);
+        // Lógica Dashboard 1
+        const dbRef1 = ref(db, 'dashboard_projetos_v1');
+        const projectList = ["MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"];
+        const indicatorMonths = [{ id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' }, { id: 'nov2025', label: 'Nov/25' }];
+        const statusList = [{val:'pendente',txt:'Pendente',cls:'status-pendente'},{val:'andamento',txt:'Andamento',cls:'status-andamento'},{val:'pendente-associa',txt:'Pend. Assoc.',cls:'status-pendente-associa'},{val:'finalizado',txt:'Finalizado',cls:'status-finalizado'}];
 
-            // Função para salvar no Firebase (substitui LocalStorage)
-            const saveToCloud = (newData) => {
-                if (window.FB_DB) {
-                    const dbRef = window.FB_REF(window.FB_DB, 'painel_contingencia_v1');
-                    window.FB_SET(dbRef, newData).catch(err => alert("Erro ao salvar: " + err.message));
-                }
-            };
-
-            const togglePriorityStatus = (id, projectKey) => {
-                const newData = associados.map(item => {
-                    if (item.id === id) {
-                        const curr = item.projetos[projectKey];
-                        const next = curr === 'low_priority' ? 'priority_todo' : 
-                                     curr === 'priority_todo' ? 'priority_doing' : 
-                                     curr === 'priority_doing' ? 'priority_done' : 'low_priority';
-                        return { ...item, projetos: { ...item.projetos, [projectKey]: next } };
-                    }
-                    return item;
-                });
-                // O listener do Firebase vai atualizar o estado visual, então só mandamos salvar
-                saveToCloud(newData);
-            };
-
-            const handleSaveForm = (formData) => {
-                let newData;
-                if (editingId) {
-                    newData = associados.map(item => item.id === editingId ? { ...item, ...formData } : item);
-                } else {
-                    const newId = associados.length > 0 ? Math.max(...associados.map(a => a.id)) + 1 : 1;
-                    const emptyProjects = {};
-                    Object.keys(projectLabels).forEach(key => emptyProjects[key] = 'low_priority');
-                    newData = [{ id: newId, ...formData, projetos: emptyProjects }, ...associados];
-                }
-                saveToCloud(newData);
-                setIsModalOpen(false);
-            };
-
-            const handleDelete = (id) => {
-                if (confirm('Excluir loja?')) {
-                    const newData = associados.filter(item => item.id !== id);
-                    saveToCloud(newData);
-                }
-            };
-
-            // Renderização Simplificada para caber no código
-            return (
-                <div className="p-6 pb-20">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold text-slate-800">Painel de Contingência (Sincronizado)</h1>
-                        <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-[#FF5510] text-white px-4 py-2 rounded-lg hover:bg-orange-600 font-bold shadow">+ Adicionar Loja</button>
-                    </div>
-
-                    <div className="grid gap-4">
-                        {associados.length === 0 && <div className="text-center p-10 bg-white rounded-xl shadow-sm">Nenhum dado encontrado. Adicione uma loja para começar.</div>}
-                        {associados.map(item => (
-                            <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                                <div className="flex justify-between mb-4 border-b pb-2">
-                                    <div>
-                                        <h3 className="font-bold text-lg">{item.loja}</h3>
-                                        <span className="text-sm text-slate-500">{item.associado} | CNPJ: {item.cnpj}</span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => { setEditingId(item.id); setIsModalOpen(true); }} className="text-blue-500 hover:bg-blue-50 p-2 rounded"><Pencil size={18}/></button>
-                                        <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={18}/></button>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                                    {Object.entries(item.projetos).map(([key, status]) => (
-                                        <div key={key} onClick={() => togglePriorityStatus(item.id, key)} 
-                                            className={`p-2 rounded text-xs cursor-pointer border flex items-center gap-1 select-none transition-colors
-                                            ${status==='priority_done' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 
-                                              status==='priority_doing' ? 'bg-orange-100 border-orange-300 text-orange-800' :
-                                              status==='priority_todo' ? 'bg-red-100 border-red-300 text-red-800' : 'bg-slate-50 text-slate-400'}`}>
-                                            {status==='priority_done' ? <CheckCircle2 size={12}/> : status==='priority_doing' ? <Hammer size={12}/> : status==='priority_todo' ? <AlertTriangle size={12}/> : <MinusCircle size={12}/>}
-                                            <span className="truncate">{projectLabels[key]}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Modal React Integrado */}
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 modal-overlay">
-                            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                                <h3 className="font-bold text-lg mb-4">{editingId ? 'Editar' : 'Nova Loja'}</h3>
-                                <StoreForm onSave={handleSaveForm} onClose={() => setIsModalOpen(false)} 
-                                    initialData={editingId ? associados.find(a => a.id === editingId) : { associado: '', loja: '', ge: '', cnpj: '' }} />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+        function initDropdowns() {
+            const pSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
+            pSelects.forEach(sel => {
+                if(!sel) return;
+                sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione</option>' : '<option value="">Todos</option>';
+                projectList.forEach(p => sel.add(new Option(p, p)));
+            });
         }
+        initDropdowns();
 
-        const StoreForm = ({ onSave, onClose, initialData }) => {
-            const [formData, setFormData] = React.useState(initialData);
-            const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-            return (
-                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-3">
-                    <input name="associado" placeholder="Associado" value={formData.associado} onChange={handleChange} required className="w-full border p-2 rounded" />
-                    <input name="loja" placeholder="Loja" value={formData.loja} onChange={handleChange} required className="w-full border p-2 rounded" />
-                    <input name="ge" placeholder="GE" value={formData.ge} onChange={handleChange} className="w-full border p-2 rounded" />
-                    <input name="cnpj" placeholder="CNPJ" value={formData.cnpj} onChange={handleChange} className="w-full border p-2 rounded" />
-                    <div className="flex justify-end gap-2 mt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 border rounded">Cancelar</button>
-                        <button type="submit" className="px-4 py-2 bg-[#FF5510] text-white rounded">Salvar</button>
-                    </div>
-                </form>
-            );
-        };
+        let allStoresData = [], allFlattenedData = [], currentChartInstance = null, currentChartRowData = null;
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ContingencyPlan />);
-    </script>
+        onValue(dbRef1, (snapshot) => {
+            const data = snapshot.val();
+            allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+            processDataV1();
+        });
 
-    <script>
-        const projectList = ["MIX", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO", "MARCAS PROPRIAS", "GC", "DELIVERY", "INSPIRE +", "DERMACLUB", "SERVIÇOS", "IDOSO", "ESPECIAIS", "FIDELIZA"];
-        let allStoresData = []; 
-        let allFlattenedData = [];
-
-        // Aguarda o Firebase Global estar pronto
-        const startDashboard = () => {
-            if (!window.FB_REF) return setTimeout(startDashboard, 100);
-            
-            // Popula Dropdowns
-            const pSelect = document.getElementById('filter-projeto');
-            const modalSelect = document.getElementById('nome-projeto');
-            projectList.forEach(p => {
-                pSelect.add(new Option(p, p));
-                modalSelect.add(new Option(p, p));
-            });
-            pSelect.insertBefore(new Option("Todos", ""), pSelect.firstChild);
-            pSelect.value = "";
-
-            // Listener do Firebase (Dashboard 2 usa o nó 'dashboard_projetos_v1')
-            const dbRef = window.FB_REF(window.FB_DB, 'dashboard_projetos_v1');
-            window.FB_ONVALUE(dbRef, (snapshot) => {
-                const data = snapshot.val();
-                allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-                processData();
-            });
-        };
-        
-        window.addEventListener('load', startDashboard);
-
-        // Processamento de Dados
-        function processData() {
+        function processDataV1() {
             allFlattenedData = [];
-            const sets = { analistas: new Set(), ges: new Set() };
-            let kpis = { total: new Set(), pend: 0, and: 0, fin: 0 };
-            
             allStoresData.forEach(store => {
-                if(!store) return;
-                kpis.total.add(store.id);
-                if(store.analista) sets.analistas.add(store.analista);
-                if(store.ge) sets.ges.add(store.ge);
-                
-                if(store.projects) {
-                    Object.keys(store.projects).forEach(pName => {
-                        const p = store.projects[pName];
-                        if(p.status === 'pendente') kpis.pend++;
-                        if(p.status === 'andamento') kpis.and++;
-                        if(p.status === 'finalizado') kpis.fin++;
-                        allFlattenedData.push({ ...store, projectName: pName, ...p });
-                    });
-                }
+                if(!store || !store.projects) return;
+                Object.keys(store.projects).forEach(pName => {
+                    allFlattenedData.push({ ...store, projectName: pName, ...store.projects[pName] });
+                });
             });
-
-            // Atualiza KPIs
-            document.getElementById('kpi-total-lojas').innerText = kpis.total.size;
-            document.getElementById('kpi-projetos-pendentes').innerText = kpis.pend;
-            document.getElementById('kpi-em-andamento').innerText = kpis.and;
-            document.getElementById('kpi-projetos-finalizados').innerText = kpis.fin;
-
-            // Renderiza Tabela
-            renderTable(allFlattenedData);
+            renderTableV1(allFlattenedData);
+            updateKPIsV1();
         }
 
-        function renderTable(data) {
+        function renderTableV1(data) {
             const tbody = document.getElementById('project-table-body');
             tbody.innerHTML = '';
+            if(!data.length) { tbody.innerHTML = '<tr><td colspan="15" class="p-8 text-center text-gray-500">Nenhum dado encontrado.</td></tr>'; return; }
             
-            // Filtros simples
-            const fLoja = document.getElementById('filter-loja').value.toLowerCase();
-            const fProj = document.getElementById('filter-projeto').value;
-            
-            const filtered = data.filter(d => 
-                (!fProj || d.projectName === fProj) && 
-                (!fLoja || d.nomeLoja.toLowerCase().includes(fLoja) || d.id.includes(fLoja))
-            );
-
-            if(filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">Sem dados.</td></tr>';
-                return;
-            }
-
-            filtered.forEach(r => {
+            data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-b hover:bg-gray-50';
-                // Status Color
-                const cls = r.status === 'finalizado' ? 'bg-green-100 text-green-800' : r.status === 'andamento' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
-                
+                const statusClass = statusList.find(s=>s.val===row.status)?.cls || 'status-default';
+                const inputs = indicatorMonths.map(m => `<td class="px-2 text-center text-xs"><input class="indicator-input-table" value="${row.indicators?.[m.id] || ''}" disabled></td>`).join('');
                 tr.innerHTML = `
-                    <td class="px-4 py-3">${r.nomeLoja}</td>
-                    <td class="px-4 py-3 text-xs text-gray-500">${r.id}</td>
-                    <td class="px-4 py-3 text-xs">${r.analista||'-'}</td>
-                    <td class="px-4 py-3 font-bold text-xs">${r.projectName}</td>
-                    <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-xs ${cls}">${r.status}</span></td>
-                    <td class="px-4 py-3 text-center">${r.goal||'-'}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button class="text-blue-500 hover:underline text-xs" onclick="editStore('${r.id}')">Editar</button>
-                    </td>
+                    <td class="px-4 py-2 font-medium">${row.nomeLoja}</td>
+                    <td class="px-4 py-2 text-xs text-gray-500">${row.id}</td>
+                    <td class="px-4 py-2 font-bold text-xs">${row.projectName}</td>
+                    <td class="px-4 py-2 text-center text-xs"><select class="status-select ${statusClass} text-xs" data-id="${row.id}" data-p="${row.projectName}">${statusList.map(s=>`<option value="${s.val}" ${row.status===s.val?'selected':''}>${s.txt}</option>`).join('')}</select></td>
+                    <td class="px-4 py-2 text-center text-xs">${row.goal || '-'}</td>
+                    ${inputs}
+                    <td class="px-4 py-2 text-center"><button class="text-red-500 del-btn" data-id="${row.id}" data-p="${row.projectName}"><i class="fa-solid fa-trash"></i></button></td>
                 `;
                 tbody.appendChild(tr);
             });
+            tbody.querySelectorAll('select').forEach(el => el.onchange = (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, p => p.status = e.target.value));
+            tbody.querySelectorAll('.del-btn').forEach(el => el.onclick = (e) => {
+                if(confirm("Excluir?")) {
+                    const {id, p} = e.currentTarget.dataset;
+                    const clone = JSON.parse(JSON.stringify(allStoresData));
+                    const idx = clone.findIndex(s => s && s.id === id);
+                    if(idx>-1) { delete clone[idx].projects[p]; set(dbRef1, clone); }
+                }
+            });
         }
 
-        // Funções de Modal e Salvamento (Simplificadas para caber)
-        const modal = document.getElementById('store-modal');
-        document.getElementById('open-modal-btn').onclick = () => { 
-            document.getElementById('store-form').reset(); 
-            document.getElementById('cnpj').readOnly = false;
-            modal.classList.remove('hidden'); 
-        };
-        document.getElementById('close-modal-btn').onclick = () => modal.classList.add('hidden');
+        function updateGeneric(id, pName, fn) {
+            const clone = JSON.parse(JSON.stringify(allStoresData));
+            const idx = clone.findIndex(s => s && s.id === id);
+            if(idx > -1 && clone[idx].projects[pName]) { fn(clone[idx].projects[pName]); set(dbRef1, clone); }
+        }
 
+        function updateKPIsV1() {
+            document.getElementById('kpi-total-lojas').textContent = new Set(allFlattenedData.map(r=>r.id)).size;
+            document.getElementById('kpi-projetos-pendentes').textContent = allFlattenedData.filter(r=>r.status==='pendente').length;
+        }
+
+        const show = (id) => document.getElementById(id).classList.remove('hidden');
+        const hide = (id) => document.getElementById(id).classList.add('hidden');
+        document.getElementById('open-modal-btn').onclick = () => { document.getElementById('store-form').reset(); show('store-modal'); };
+        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide('store-modal'));
+        document.getElementById('close-chart-modal-btn').onclick = () => hide('chart-modal');
         document.getElementById('store-form').onsubmit = (e) => {
             e.preventDefault();
             const fd = new FormData(e.target);
             const id = fd.get('cnpj');
             const pName = fd.get('nome-projeto');
-            
-            // Clona dados atuais
-            const clone = JSON.parse(JSON.stringify(allStoresData));
-            let idx = clone.findIndex(s => s && s.id === id);
-            
-            const common = { nomeLoja: fd.get('nome-loja'), analista: fd.get('analista'), ge: fd.get('ge') };
-            const newProj = { status: 'pendente', goal: fd.get('meta') };
+            let stores = JSON.parse(JSON.stringify(allStoresData));
+            let idx = stores.findIndex(s => s && s.id === id);
+            const newStore = { id, nomeLoja: fd.get('nome-loja'), ge: fd.get('ge'), analista: fd.get('analista'), associado: fd.get('associado') };
+            const newProj = { status: 'pendente', goal: fd.get('meta'), indicators: {} };
+            if(idx > -1) { stores[idx] = { ...stores[idx], ...newStore }; if(!stores[idx].projects) stores[idx].projects={}; stores[idx].projects[pName] = newProj; } 
+            else { stores.push({ ...newStore, projects: { [pName]: newProj } }); }
+            set(dbRef1, stores); hide('store-modal');
+        };
+        function showToast(msg, err=false) { const t=document.getElementById('toast'); t.textContent=msg; t.className=`fixed top-6 right-6 p-4 rounded text-white shadow-lg transform transition-all ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`; setTimeout(()=>t.classList.add('translate-x-full','opacity-0'), 2000); }
+    </script>
 
-            if(idx > -1) {
-                clone[idx] = { ...clone[idx], ...common };
-                if(!clone[idx].projects) clone[idx].projects = {};
-                clone[idx].projects[pName] = newProj;
-            } else {
-                clone.push({ ...common, id: id, projects: { [pName]: newProj } });
+    <script type="text/babel">
+        // Ícones
+        const IconBase=({children,size=20,className="",...props})=>(<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
+        const Rocket=(p)=><IconBase {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 2.75-.45 3 0L9 12z"/></IconBase>;
+        const Plus=(p)=><IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
+        const Check=(p)=><IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>;
+        const Hammer=(p)=><IconBase {...p}><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>;
+        const AlertTriangle=(p)=><IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>;
+        const MinusCircle=(p)=><IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>;
+        const CheckCircle2=(p)=><IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>;
+        const Users=(p)=><IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
+        const Store=(p)=><IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></IconBase>;
+        const Download=(p)=><IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
+        const Upload=(p)=><IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
+
+        const projectLabels = { mix: "Mix", precificacao: "Precif.", pbm: "PBM", pec: "PEC", setorizacao: "Setor.", marcasProprias: "M. Próprias", gc: "GC", delivery: "Delivery", inspire: "Inspire", dermaclub: "Derma", servicos: "Serviços", idoso: "Idoso", especiais: "Especiais", fideliza: "Fideliza" };
+
+        const initialDataRaw = [
+          { id: 1, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - MATRIZ", ge: "13", cnpj: "36.728.431/0001-16", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: true, delivery: false, inspire: false, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 2, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 02", ge: "13", cnpj: "36.728.431/0002-05", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 3, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 03", ge: "13", cnpj: "36.728.431/0003-88", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 4, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 04", ge: "13", cnpj: "36.728.431/0004-69", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 5, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - MATRIZ", ge: "625", cnpj: "22.053.641/0002-28", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 6, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - FILIAL 02", ge: "625", cnpj: "22.053.641/0003-09", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 7, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRIETO FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "39.659.264/0001-97", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 8, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRI FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "33.155.990/0001-96", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 9, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - LOJA 01", ge: "682", cnpj: "05.313.670/0003-01", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 10, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - FILIAL 01", ge: "682", cnpj: "05.313.670/0002-12", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 11, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA", ge: "368", cnpj: "34.565.893/0001-34", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 12, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA - FILIAL 01", ge: "368", cnpj: "34.565.893/0002-15", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 13, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "OLIVEIRA & IBANHEZ LTDA - MATRIZ", ge: "368", cnpj: "40.508.620/0001-69", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 14, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "LLI COMERCIO DE MEDICAMENTOS - FILIAL 01", ge: "368", cnpj: "30.345.678/0001-XX", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 15, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA ULTRA POPULAR PEIXOTO", ge: "27", cnpj: "20.330.018/0001-69", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 16, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ULTRA POPULAR PRIMEIRO DE MARCO", ge: "27", cnpj: "44.396.290/0001-00", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: false, especiais: false, fideliza: false } },
+          { id: 17, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DESCONTO FACIL COMERCIO", ge: "27", cnpj: "29.802.416/0001-05", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 18, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA PANTANAL LTDA - MATRIZ", ge: "27", cnpj: "08.273.660/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 19, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ARAUJO & SILVA LTDA", ge: "27", cnpj: "18.528.172/0001-71", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 20, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "M F GURGEL ARAUJO - ME", ge: "27", cnpj: "23.585.408/0001-78", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: true, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 21, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J.C.C. MEDICAMENTOS LTDA-ME", ge: "27", cnpj: "08.383.511/0001-41", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 22, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J C ARAUJO LTDA - MATRIZ", ge: "27", cnpj: "27.202.935/0001-45", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 23, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA SAUDE TOTAL", ge: "27", cnpj: "12.345.678/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 24, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA BEM ESTAR", ge: "27", cnpj: "98.765.432/0001-10", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 25, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA VIDA NOVA", ge: "27", cnpj: "11.223.344/0001-55", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 26, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA POPULAR CENTRO", ge: "27", cnpj: "55.667.788/0001-99", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 27, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA NOVA ERA", ge: "27", cnpj: "99.887.766/0001-22", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 28, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA SAO JOAO", ge: "27", cnpj: "33.445.566/0001-77", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 29, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA CENTRAL", ge: "27", cnpj: "77.889.900/0001-33", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } }
+        ];
+
+        function PilotPanel() {
+            const [associados, setAssociados] = React.useState([]);
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const [isLoading, setIsLoading] = React.useState(true);
+            
+            // --- CONEXÃO FIREBASE (PILOTO) ---
+            React.useEffect(() => {
+                const db = window.firebaseDB;
+                const pilotRef = window.firebaseRef(db, 'painel_piloto_v1');
+                
+                window.firebaseOnValue(pilotRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const parsedData = Array.isArray(data) ? data : Object.values(data);
+                        setAssociados(parsedData);
+                        setIsLoading(false);
+                    } else {
+                        // Se vazio, carrega 29 lojas
+                        const processedInitial = initialDataRaw.map(item => {
+                            const newProjetos = {};
+                            Object.keys(item.projetos).forEach(key => {
+                                const val = item.projetos[key];
+                                if (val === true) newProjetos[key] = 'priority_todo';
+                                else newProjetos[key] = 'low_priority';
+                            });
+                            return { ...item, projetos: newProjetos };
+                        });
+                        window.firebaseSet(pilotRef, processedInitial);
+                        setAssociados(processedInitial);
+                        setIsLoading(false);
+                    }
+                });
+            }, []);
+
+            const toggleStatus = (id, key) => {
+                const updated = associados.map(item => {
+                    if(item.id === id) {
+                        const curr = item.projetos[key];
+                        let next = 'low_priority';
+                        if (curr === 'low_priority') next = 'priority_todo';
+                        else if (curr === 'priority_todo') next = 'priority_doing';
+                        else if (curr === 'priority_doing') next = 'priority_done';
+                        else if (curr === 'priority_done') next = 'low_priority';
+                        return { ...item, projetos: { ...item.projetos, [key]: next } };
+                    }
+                    return item;
+                });
+                const db = window.firebaseDB;
+                window.firebaseSet(window.firebaseRef(db, 'painel_piloto_v1'), updated);
+            };
+
+            const calcProgress = (projetos) => {
+                const vals = Object.values(projetos);
+                const total = vals.length;
+                const done = vals.filter(v => v === 'priority_done').length;
+                return total > 0 ? Math.round((done / total) * 100) : 0;
             }
 
-            // Salva no Firebase
-            const dbRef = window.FB_REF(window.FB_DB, 'dashboard_projetos_v1');
-            window.FB_SET(dbRef, clone);
-            modal.classList.add('hidden');
-        };
+            // Função de emergência
+            const resetData = () => {
+                if(confirm("Restaurar as 29 lojas originais?")) {
+                    const processedInitial = initialDataRaw.map(item => {
+                        const newProjetos = {};
+                        Object.keys(item.projetos).forEach(key => {
+                            const val = item.projetos[key];
+                            if (val === true) newProjetos[key] = 'priority_todo';
+                            else newProjetos[key] = 'low_priority';
+                        });
+                        return { ...item, projetos: newProjetos };
+                    });
+                    const db = window.firebaseDB;
+                    window.firebaseSet(window.firebaseRef(db, 'painel_piloto_v1'), processedInitial);
+                }
+            }
 
-        // Filtros Events
-        document.getElementById('apply-filters-btn').onclick = processData;
-        document.getElementById('filter-loja').oninput = processData;
+            return (
+                <div className="p-8 max-w-[1800px] mx-auto">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
+                        <div className="relative z-10 flex justify-between items-center">
+                            <div><h2 className="text-3xl font-extrabold mb-2 flex items-center gap-3"><Rocket /> Painel Piloto - Centro Oeste</h2><p className="opacity-90">{associados.length} Lojas Participantes</p></div>
+                            <div className="flex gap-2">
+                                <button onClick={resetData} className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs font-bold transition">Restaurar Dados Padrão</button>
+                                <button onClick={() => setIsModalOpen(true)} className="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl font-bold flex items-center gap-2 backdrop-blur-sm transition-all"><Plus /> Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow border border-gray-200 overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
+                                <tr>
+                                    <th className="p-4 min-w-[250px] sticky left-0 bg-gray-50 z-20 shadow-md">Associado / Loja</th>
+                                    <th className="p-4 text-center">Progresso</th>
+                                    {Object.entries(projectLabels).map(([k,v]) => (
+                                        <th key={k} className="p-2 text-center min-w-[80px]"><div className="flex flex-col items-center gap-1"><span className="text-xs uppercase">{v}</span></div></th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {isLoading ? <tr><td colSpan="20" className="p-8 text-center text-gray-500">Carregando lojas...</td></tr> : 
+                                 associados.length === 0 ? <tr><td colSpan="20" className="p-8 text-center text-gray-500">Nenhuma loja. Clique em Restaurar Padrão.</td></tr> :
+                                 associados.map(item => {
+                                    const progress = calcProgress(item.projetos);
+                                    return (
+                                    <tr key={item.id} className="border-b hover:bg-blue-50/30 transition-colors group">
+                                        <td className="p-4 sticky left-0 bg-white group-hover:bg-blue-50/30 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                            <div className="font-bold text-gray-800">{item.associado}</div>
+                                            <div className="text-xs text-gray-500">{item.loja}</div>
+                                            <div className="text-[10px] text-gray-400 mt-1">CNPJ: {item.cnpj} | GE: {item.ge}</div>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-16 bg-gray-200 rounded-full h-1.5"><div className="bg-blue-600 h-1.5 rounded-full" style={{width: `${progress}%`}}></div></div>
+                                                <span className="text-xs font-bold text-blue-600">{progress}%</span>
+                                            </div>
+                                        </td>
+                                        {Object.entries(projectLabels).map(([key, label]) => {
+                                            const status = item.projetos[key] || 'low_priority';
+                                            return (
+                                                <td key={key} className="p-2 text-center cursor-pointer border-l border-gray-50" onClick={() => toggleStatus(item.id, key)}>
+                                                    <div className="flex justify-center transition-transform active:scale-90 hover:scale-110">
+                                                        {status === 'priority_done' ? <div className="text-emerald-600 bg-emerald-100 p-1.5 rounded-lg"><Check size={16} strokeWidth={3}/></div> :
+                                                         status === 'priority_doing' ? <div className="text-orange-500 bg-orange-100 p-1.5 rounded-lg border border-orange-200"><Hammer size={16}/></div> :
+                                                         status === 'priority_todo' ? <div className="text-red-500 bg-red-100 p-1.5 rounded-lg border border-red-200"><AlertTriangle size={16}/></div> :
+                                                         <div className="text-gray-300 hover:text-gray-400"><MinusCircle size={16}/></div>}
+                                                    </div>
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                )})}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('react-pilot-root'));
+        root.render(<PilotPanel />);
     </script>
 </body>
 </html>
