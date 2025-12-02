@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Integrado - Farmarcas</title>
+    <title>Sistema Integrado Farmarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -18,9 +19,57 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
+        /* --- ESTILOS GERAIS DE NAVEGAÇÃO --- */
+        body { background-color: #f3f4f6; margin: 0; padding: 0; }
         
-        /* Estilos do Código Original */
+        /* Barra de Navegação Superior */
+        .main-nav {
+            background-color: #1e293b; /* Slate-800 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .nav-logo { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-buttons { display: flex; gap: 0.5rem; }
+        
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-btn:hover { background-color: #334155; color: white; }
+        
+        .nav-btn.active {
+            background-color: #FF5510;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(255, 85, 16, 0.3);
+        }
+
+        /* Controle de Exibição das Abas */
+        .view-section { display: none; width: 100%; }
+        .view-section.active { display: block; }
+
+        /* --- ESTILOS DO DASHBOARD 1 (ORIGINAL) --- */
+        .dash1-container { font-family: 'Rubik', sans-serif; }
         .status-select {
             padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
             appearance: none; -webkit-appearance: none;
@@ -31,114 +80,98 @@
         .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
         .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
         .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
-        
         .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
         .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
-        
         .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         #toast { transition: transform 0.3s, opacity 0.3s; }
         .obs-filled { color: #3b82f6; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* Estilos adicionais para o menu de navegação */
-        .nav-item { cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; color: #4b5563; }
-        .nav-item:hover { background-color: #f3f4f6; color: #FF5510; }
-        .nav-item.active { background-color: #fff7ed; color: #FF5510; font-weight: 600; border-left: 4px solid #FF5510; }
-        .nav-item i { width: 24px; text-align: center; margin-right: 12px; }
-
-        /* Estilos para o React Modal Overlay (Código 2) */
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 60; }
-        
-        /* Ajuste de fonte para a área do React */
+        /* --- ESTILOS DO DASHBOARD 2 (REACT) --- */
         #react-root { font-family: 'Inter', sans-serif; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        /* Scrollbar customizado */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-    <aside id="filter-sidebar" class="fixed top-0 left-0 z-50 w-72 h-screen bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
-        <h3 class="text-2xl font-extrabold text-[#FF5510] mb-8 px-2">Farmarcas <span class="text-gray-400 text-sm block font-normal">Dashboard</span></h3>
-        
-        <nav class="mb-8">
-            <ul>
-                <li id="tab-dashboard" class="nav-item active" onclick="switchTab('dashboard')">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard Geral
-                </li>
-                <li id="tab-piloto" class="nav-item" onclick="switchTab('piloto')">
-                    <i class="fa-solid fa-flask"></i> Projeto Piloto
-                </li>
-            </ul>
-        </nav>
-
-        <hr class="border-gray-200 mb-6">
-
-        <div id="sidebar-filters-container">
-            <h3 class="text-sm font-bold text-gray-500 uppercase mb-4 px-2">Filtros Dashboard</h3>
-            <div class="space-y-3 overflow-y-auto h-[calc(100vh-380px)] pr-2 custom-scroll">
-                <div><label class="block text-xs font-medium text-gray-500">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                <div><label class="block text-xs font-medium text-gray-500">GE</label><select id="filter-ge" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                <div><label class="block text-xs font-medium text-gray-500">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                <div><label class="block text-xs font-medium text-gray-500">UF</label><select id="filter-uf" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                <div><label class="block text-xs font-medium text-gray-500">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                <div><label class="block text-xs font-medium text-gray-500">CNPJ / Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded border-gray-300 text-sm" placeholder="Busca rápida..."></div>
-            </div>
-            <div class="mt-4 space-y-2">
-                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded text-sm font-semibold hover:bg-[#E04A0E]">Aplicar</button>
-                <button id="clear-filters-btn" class="w-full bg-gray-100 text-gray-600 py-2 rounded text-sm hover:bg-gray-200">Limpar</button>
-            </div>
+    <nav class="main-nav">
+        <div class="nav-logo">
+            <span class="text-[#FF5510]"><i class="fa-solid fa-layer-group"></i></span>
+            <span>Farmarcas</span>
         </div>
-    </aside>
-
-    <main id="main-content" class="md:ml-72 transition-all duration-300 p-2 md:p-6 min-h-screen">
-        
-        <div class="md:hidden mb-4">
-            <button id="toggle-filter-btn" class="text-gray-600 p-2 bg-white rounded shadow"><i class="fa-solid fa-bars"></i> Menu</button>
+        <div class="nav-buttons">
+            <button id="btn-view-1" class="nav-btn active" onclick="switchView('view-1')">
+                <i class="fa-solid fa-chart-line"></i> Dashboard Projetos
+            </button>
+            <button id="btn-view-2" class="nav-btn" onclick="switchView('view-2')">
+                <i class="fa-solid fa-rocket"></i> Plano Piloto
+            </button>
         </div>
+    </nav>
 
-        <div id="view-dashboard">
+    <div id="view-1" class="view-section active dash1-container">
+        
+        <aside id="filter-sidebar" class="fixed top-[60px] left-0 z-30 w-72 h-[calc(100vh-60px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
+            <p class="text-xs text-gray-500 mb-4">Filtros de Analista, GE, etc. aparecerão conforme você cadastrar lojas.</p>
+            <div class="space-y-4 overflow-y-auto h-[calc(100vh-200px)] pr-2">
+                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar CNPJ"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Filtrar Loja"></div>
+            </div>
+            <div class="absolute bottom-6 left-6 right-6 space-y-3">
+                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
+                <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar Filtros</button>
+            </div>
+        </aside>
+
+        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6">
             <header class="mb-6">
-                <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6 border-l-4 border-[#FF5510]">
-                    <h1 class="text-2xl font-extrabold text-gray-800">Visão Geral</h1>
-                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 text-sm shadow">
+                <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
+                    <div class="flex items-center">
+                        <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
+                        <h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard Online</h1>
+                    </div>
+                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow">
                         <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
                     </button>
                 </nav>
-                <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-black">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-800">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-red-500">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-800">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-yellow-400">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase">Pend. Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-2xl font-extrabold text-gray-800">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-blue-500">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-800">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-green-500">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-800">0</p>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-sm font-medium text-gray-500 uppercase">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p></div>
+                    <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p></div>
                 </div>
             </header>
 
             <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">Evolução Mensal</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 items-end">
-                    <div><label class="block text-xs font-medium text-gray-500">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded border-gray-300 text-sm"></select></div>
-                    <div><label class="block text-xs font-medium text-gray-500">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded border-gray-300 text-sm"><option value="">Todos</option></select></div>
-                    <div><label class="block text-xs font-medium text-gray-500">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded border-gray-300 text-sm" placeholder="CNPJ ou Loja"></div>
-                    <button id="generate-chart-btn" class="bg-gray-800 text-white py-2 px-4 rounded text-sm font-semibold hover:bg-black h-[38px] w-full">Gerar Gráfico</button>
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                    <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="">Todos</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="CNPJ ou Loja"></div>
+                    <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full">Gerar Gráfico</button>
                 </div>
-                <div class="relative h-72"><canvas id="consolidated-chart"></canvas></div>
+                <div class="relative h-96"><canvas id="consolidated-chart"></canvas></div>
             </section>
 
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div class="p-3 border-b flex items-center">
-                    <i class="fa-solid fa-search text-gray-400 mr-2"></i>
-                    <input type="text" id="search-input" placeholder="Pesquisar na tabela..." class="w-full outline-none text-sm text-gray-700">
+                <div class="p-4 border-b">
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]">
+                    </div>
                 </div>
                 <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -175,22 +208,21 @@
                             </tr>
                         </thead>
                         <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="29" class="text-center p-8 text-gray-500">Conectando ao Firebase...</td></tr>
+                            <tr><td colspan="29" class="text-center p-8 text-gray-500">Banco de dados conectado. Adicione uma loja para começar!</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <div id="view-piloto" class="hidden">
-            <div id="react-root"></div>
-        </div>
+    <div id="view-2" class="view-section">
+        <div id="root"></div>
+    </div>
 
-    </main>
+    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
 
-    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-[100]">Msg</div>
-
-    <div id="store-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="store-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <header class="flex justify-between items-center p-5 border-b">
                 <h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2>
@@ -209,14 +241,7 @@
                         <div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
                         <div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
                         <div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
-                        
-                        <div id="form-project-group">
-                            <label class="block text-sm font-medium">Projeto</label>
-                            <select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm">
-                                <option value="" disabled selected>Carregando projetos...</option>
-                            </select>
-                        </div>
-                        
+                        <div id="form-project-group"><label class="block text-sm font-medium">Projeto</label><select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"><option value="" disabled selected>Carregando projetos...</option></select></div>
                         <div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div>
                         <div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></textarea></div>
                     </div>
@@ -229,12 +254,9 @@
         </div>
     </div>
 
-    <div id="chart-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="chart-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
-            <header class="flex justify-between items-center p-5 border-b">
-                <h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2>
-                <button id="close-chart-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button>
-            </header>
+            <header class="flex justify-between items-center p-5 border-b"><h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2><button id="close-chart-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button></header>
             <div class="p-6">
                 <div class="mb-4 flex justify-center space-x-6">
                     <label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label>
@@ -246,7 +268,7 @@
         </div>
     </div>
 
-    <div id="obs-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="obs-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
             <header class="flex justify-between items-center p-5 border-b"><h2 id="obs-modal-title" class="font-bold">Obs</h2></header>
             <div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div>
@@ -254,34 +276,20 @@
         </div>
     </div>
 
-    <div id="delete-confirm-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4">Excluir?</h2>
-            <p id="delete-modal-text" class="mb-6">Tem certeza?</p>
-            <div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div>
-        </div>
+    <div id="delete-confirm-modal" class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Excluir?</h2><p id="delete-modal-text" class="mb-6">Tem certeza?</p><div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div></div>
     </div>
 
     <script>
-        function switchTab(tabName) {
-            // Atualiza classes do menu
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-
-            // Alterna visibilidade das views
-            const dashboardView = document.getElementById('view-dashboard');
-            const pilotoView = document.getElementById('view-piloto');
-            const sidebarFilters = document.getElementById('sidebar-filters-container');
-
-            if (tabName === 'dashboard') {
-                dashboardView.classList.remove('hidden');
-                pilotoView.classList.add('hidden');
-                sidebarFilters.style.display = 'block'; // Mostra filtros da sidebar
-            } else {
-                dashboardView.classList.add('hidden');
-                pilotoView.classList.remove('hidden');
-                sidebarFilters.style.display = 'none'; // Esconde filtros pois o Piloto tem filtros próprios
-            }
+        function switchView(viewId) {
+            // Esconde todas as seções
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // Mostra a seção clicada
+            document.getElementById(viewId).classList.add('active');
+            
+            // Atualiza botões do menu
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + viewId).classList.add('active');
         }
     </script>
 
@@ -289,7 +297,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIGURAÇÃO DO FIREBASE
+        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -304,6 +312,7 @@
         const db = getDatabase(app);
         const dbRef = ref(db, 'dashboard_projetos_v1');
 
+        // --- LISTA DE PROJETOS ---
         const projectList = [
             "MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", 
             "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", 
@@ -318,14 +327,10 @@
                 document.getElementById('chart-filter-project'), 
                 document.getElementById('nome-projeto')
             ];
-            
             pSelects.forEach(sel => {
                 if(!sel) return;
-                if (sel.id === 'nome-projeto') {
-                    sel.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
-                } else {
-                    sel.innerHTML = '<option value="">Todos os Projetos</option>';
-                }
+                if (sel.id === 'nome-projeto') { sel.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>'; } 
+                else { sel.innerHTML = '<option value="">Todos os Projetos</option>'; }
                 projectList.forEach(p => sel.add(new Option(p, p)));
             });
         }
@@ -348,6 +353,7 @@
         ];
         const chartLabels = indicatorMonths.map(m => m.label);
 
+        // UI Refs
         const els = {
             tableBody: document.getElementById('project-table-body'),
             toast: document.getElementById('toast'),
@@ -371,14 +377,15 @@
                 ge: document.getElementById('filter-ge'),
                 associado: document.getElementById('filter-associado'),
                 uf: document.getElementById('filter-uf'),
-                // anjo: document.getElementById('filter-anjo'), // Removido da sidebar no layout unificado para economizar espaço
-                // bandeira: document.getElementById('filter-bandeira'),
+                anjo: document.getElementById('filter-anjo'),
+                bandeira: document.getElementById('filter-bandeira'),
                 projeto: document.getElementById('filter-projeto'),
-                // cnpj: document.getElementById('filter-cnpj'),
+                cnpj: document.getElementById('filter-cnpj'),
                 loja: document.getElementById('filter-loja')
             }
         };
 
+        // --- CONEXÃO REALTIME ---
         onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
             allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
@@ -396,6 +403,7 @@
             });
         }
 
+        // --- LÓGICA E PROCESSAMENTO ---
         function processData() {
             allFlattenedData = [];
             const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), anjos: new Set(), ufs: new Set(), bandeiras: new Set() };
@@ -426,7 +434,6 @@
 
         function populateFilters(sets) {
             const fill = (el, set) => {
-                if(!el) return;
                 const cur = el.value;
                 el.innerHTML = '<option value="">Todos</option>';
                 [...set].sort().forEach(v => v && el.add(new Option(v, v)));
@@ -434,6 +441,7 @@
             };
             fill(els.filters.analista, sets.analistas); fill(els.filters.ge, sets.ges);
             fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs);
+            fill(els.filters.anjo, sets.anjos); fill(els.filters.bandeira, sets.bandeiras);
             
             const chartGe = document.getElementById('chart-filter-ge');
             const curGe = chartGe.value;
@@ -447,17 +455,17 @@
             const f = els.filters;
             
             const filtered = allFlattenedData.filter(r => {
-                // Adaptação para o filtro de texto unificado
-                const textFilter = f.loja.value.toLowerCase();
-                const matchesText = !textFilter || r.nomeLoja.toLowerCase().includes(textFilter) || r.id.toLowerCase().includes(textFilter);
-
                 const matchesSearch = !s || r.nomeLoja.toLowerCase().includes(s) || r.id.toLowerCase().includes(s);
-                return matchesSearch && matchesText &&
+                return matchesSearch &&
                     (!f.analista.value || r.analista === f.analista.value) &&
                     (!f.ge.value || r.ge === f.ge.value) &&
                     (!f.associado.value || r.associado === f.associado.value) &&
                     (!f.uf.value || r.uf === f.uf.value) &&
-                    (!f.projeto.value || r.projectName === f.projeto.value);
+                    (!f.anjo.value || r.anjo === f.anjo.value) &&
+                    (!f.bandeira.value || r.bandeira === f.bandeira.value) &&
+                    (!f.projeto.value || r.projectName === f.projeto.value) &&
+                    (!f.cnpj.value || r.id.toLowerCase().includes(f.cnpj.value.toLowerCase())) &&
+                    (!f.loja.value || r.nomeLoja.toLowerCase().includes(f.loja.value.toLowerCase()));
             });
             renderTable(filtered);
         }
@@ -515,6 +523,7 @@
             els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore));
         }
 
+        // --- ATUALIZAÇÃO NO BANCO ---
         function updateGeneric(id, pName, fn) {
             const clone = JSON.parse(JSON.stringify(allStoresData));
             const idx = clone.findIndex(s => s && s.id === id);
@@ -550,6 +559,7 @@
             setTimeout(() => el.classList.remove('bg-green-100', 'border-green-500'), 1000);
         }
 
+        // --- MANIPULADORES DE MODAIS ---
         els.storeForm.addEventListener('submit', (e) => {
             e.preventDefault();
             document.getElementById('save-store-btn').disabled = true;
@@ -564,9 +574,9 @@
                 nomeLoja: data.get('nome-loja')
             };
 
-            if(document.getElementById('cnpj').readOnly) { 
+            if(document.getElementById('cnpj').readOnly) { // Edit Mode
                  if(idx > -1) clone[idx] = { ...clone[idx], ...common };
-            } else { 
+            } else { // Create Mode
                 const pName = data.get('nome-projeto');
                 if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); document.getElementById('save-store-btn').disabled=false; return; }
                 const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} };
@@ -585,6 +595,7 @@
             document.getElementById('save-store-btn').disabled = false;
         });
 
+        // --- KPI & HELPERS ---
         function calcKPIs() {
             const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 };
             allFlattenedData.forEach(r => {
@@ -607,6 +618,7 @@
             setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), duration);
         }
 
+        // --- EVENTOS GERAIS ---
         function openObs(e) {
             const {id, p} = e.currentTarget.dataset;
             const row = allFlattenedData.find(r => r.id === id && r.projectName === p);
@@ -636,10 +648,7 @@
             const id = e.currentTarget.dataset.id;
             const d = allFlattenedData.find(r => r.id === id);
             if(!d) return;
-            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => {
-                const input = document.getElementsByName(f)[0];
-                if(input) input.value = d[f==='nome-loja'?'nomeLoja':f]||'';
-            });
+            ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||'');
             document.getElementById('cnpj').value = id; document.getElementById('cnpj').readOnly = true;
             document.getElementById('store-modal-title').textContent = "Editar Loja";
             document.getElementById('form-project-group').style.display = 'none';
@@ -703,8 +712,8 @@
 
         const show = (el) => el.classList.remove('hidden');
         const hide = (el) => el.classList.add('hidden');
-        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v ? v.value : '']))));
-        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => { if(els.filters[k]) els.filters[k].value = v; }); };
+        const saveFilters = () => localStorage.setItem('filters', JSON.stringify(Object.fromEntries(Object.entries(els.filters).map(([k,v]) => [k, v.value]))));
+        const loadFilters = () => { const f = JSON.parse(localStorage.getItem('filters')); if(f) Object.entries(f).forEach(([k,v]) => els.filters[k].value = v); };
         
         document.getElementById('open-modal-btn').onclick = () => {
             els.storeForm.reset(); document.getElementById('cnpj').readOnly = false;
@@ -725,57 +734,89 @@
         document.getElementById('clear-filters-btn').onclick = () => { localStorage.removeItem('filters'); location.reload(); };
         els.searchInput.addEventListener('input', () => { saveFilters(); applyFilters(); });
         document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
-        
-        // Input da sidebar unificado
-        document.getElementById('filter-loja').addEventListener('input', () => { saveFilters(); applyFilters(); });
 
     </script>
 
     <script type="text/babel">
-        // --- ÍCONES ---
+        // Componentes de Ícone
         const IconBase = ({ children, size = 24, className = "", ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
         );
-        const Target = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>);
-        const MinusCircle = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
-        const AlertTriangle = (props) => (<IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
-        const Hammer = (props) => (<IconBase {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
-        const CheckCircle2 = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
-        const ArrowRight = (props) => (<IconBase {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>);
-        const BarChart3 = (props) => (<IconBase {...props}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>);
-        const LayoutList = (props) => (<IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></IconBase>);
-        const Grip = (props) => (<IconBase {...props}><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></IconBase>);
-        const Check = (props) => (<IconBase {...props}><path d="M20 6 9 17l-5-5"/></IconBase>);
-        const Trophy = (props) => (<IconBase {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>);
-        const Store = (props) => (<IconBase {...props}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>);
-        const Users = (props) => (<IconBase {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>);
-        const Plus = (props) => (<IconBase {...props}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>);
-        const Pencil = (props) => (<IconBase {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
-        const Trash2 = (props) => (<IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
-        const XIcon = (props) => (<IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
-        const Save = (props) => (<IconBase {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
-        const Filter = (props) => (<IconBase {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>);
-        const Download = (props) => (<IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>);
-        const Upload = (props) => (<IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>);
+        const Target = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>;
+        const MinusCircle = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>;
+        const AlertTriangle = (p) => <IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>;
+        const Hammer = (p) => <IconBase {...p}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>;
+        const CheckCircle2 = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>;
+        const ArrowRight = (p) => <IconBase {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>;
+        const BarChart3 = (p) => <IconBase {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>;
+        const LayoutList = (p) => <IconBase {...p}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></IconBase>;
+        const Grip = (p) => <IconBase {...p}><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></IconBase>;
+        const Check = (p) => <IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>;
+        const Trophy = (p) => <IconBase {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>;
+        const Store = (p) => <IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>;
+        const Users = (p) => <IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
+        const Plus = (p) => <IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
+        const Pencil = (p) => <IconBase {...p}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>;
+        const Trash2 = (p) => <IconBase {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>;
+        const XIcon = (p) => <IconBase {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
+        const Save = (p) => <IconBase {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>;
+        const Filter = (p) => <IconBase {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>;
+        const Download = (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
+        const Upload = (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
+        const Rocket = (p) => <IconBase {...p}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.1 2.75-.45 3 0L9 12z"/><path d="M12 15v5s3.03-.55 4-2c1.1-1.62.45-2.75 0-3L12 15z"/></IconBase>;
 
+        // Mapa de Dados e Configuração
         const EXCEL_COLUMNS = [
             { key: 'cnpj', label: 'CNPJ' }, { key: 'ge', label: 'GE' }, { key: 'associado', label: 'ASSOCIADO' }, { key: 'loja', label: 'NOME LOJA' },
             { key: 'mix', label: 'MIX DE PRODUTOS' }, { key: 'precificacao', label: 'PRECIFICAÇÃO' }, { key: 'pbm', label: 'PBM' }, { key: 'pec', label: 'PEC' },
             { key: 'setorizacao', label: 'SETORIZAÇÃO' }, { key: 'marcasProprias', label: 'MARCAS PROPRIAS' }, { key: 'gc', label: 'GC (FARMACINHA)' },
-            { key: 'delivery', label: 'DELIVERY' }, { key: 'inspire', label: 'INSPIRE +' }, { key: 'dermaclub', label: 'DERMACLUB' },
-            { key: 'servicos', label: 'SERVIÇOS FARM.' }, { key: 'idoso', label: 'CAMPANHA IDOSO' }, { key: 'especiais', label: 'MEDICAMENTOS ESPECIAIS' },
-            { key: 'fideliza', label: 'FIDELIZA MAIS' }
+            { key: 'delivery', label: 'DELIVERY' }, { key: 'inspire', label: 'INSPIRE +' }, { key: 'dermaclub', label: 'DERMACLUB' }, { key: 'servicos', label: 'SERVIÇOS FARM.' },
+            { key: 'idoso', label: 'CAMPANHA IDOSO' }, { key: 'especiais', label: 'MEDICAMENTOS ESPECIAIS' }, { key: 'fideliza', label: 'FIDELIZA MAIS' }
         ];
 
-        const EXCEL_LABEL_TO_KEY = EXCEL_COLUMNS.reduce((acc, col) => { acc[col.label.trim().toUpperCase()] = col.key; return acc; }, {});
-        const projectLabels = { mix: "Mix de Produtos", precificacao: "Precificação", pbm: "PBM", pec: "PEC", setorizacao: "Setorização", marcasProprias: "Marcas Próprias", gc: "Gerenc. Categoria", delivery: "Delivery", inspire: "Inspire +", dermaclub: "DermaClub", servicos: "Serviços Farm.", idoso: "Campanha Idoso", especiais: "Med. Especiais", fideliza: "Fideliza Mais" };
+        const projectLabels = {
+          mix: "Mix de Produtos", precificacao: "Precificação", pbm: "PBM", pec: "PEC",
+          setorizacao: "Setorização", marcasProprias: "Marcas Próprias", gc: "Gerenc. Categoria",
+          delivery: "Delivery", inspire: "Inspire +", dermaclub: "DermaClub",
+          servicos: "Serviços Farm.", idoso: "Campanha Idoso", especiais: "Med. Especiais", fideliza: "Fideliza Mais"
+        };
+
         const STATUS_MAP = { 'low_priority': 'BAIXA PRIORIDADE', 'priority_todo': 'A FAZER', 'priority_doing': 'TRABALHANDO', 'priority_done': 'FINALIZADO' };
-        const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done', 'BAIXA': 'low_priority', 'PENDENTE': 'priority_todo', 'EM ANDAMENTO': 'priority_doing', 'CONCLUIDO': 'priority_done', 'X': 'priority_todo' };
+        const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done' };
 
         const initialDataRaw = [
-          { id: 1, associado: "EXEMPLO", loja: "LOJA EXEMPLO", ge: "0", cnpj: "00.000.000/0001-00", projetos: { mix: false } }
+          { id: 1, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - MATRIZ", ge: "13", cnpj: "36.728.431/0001-16", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: true, delivery: false, inspire: false, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 2, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 02", ge: "13", cnpj: "36.728.431/0002-05", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 3, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 03", ge: "13", cnpj: "36.728.431/0003-88", projetos: { mix: false, precificacao: false, pbm: true, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 4, associado: "ALEXANDRE CORREIA ABRANTES", loja: "ABRE FARMA - FILIAL 04", ge: "13", cnpj: "36.728.431/0004-69", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: true } },
+          { id: 5, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - MATRIZ", ge: "625", cnpj: "22.053.641/0002-28", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 6, associado: "ANDERSON APARECIDO DE OLIVEIRA VONO", loja: "OPUS FARMA LTDA - FILIAL 02", ge: "625", cnpj: "22.053.641/0003-09", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 7, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRIETO FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "39.659.264/0001-97", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 8, associado: "PAMELA MARANA DAMAREN SANTOS", loja: "TRI FARMA MEDICAMENTOS LTDA", ge: "470", cnpj: "33.155.990/0001-96", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 9, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - LOJA 01", ge: "682", cnpj: "05.313.670/0003-01", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 10, associado: "SILVIA CANDIDA DE OLIVEIRA DE SOUZA", loja: "SILVIA CANDIDA DE OLIVEIRA - FILIAL 01", ge: "682", cnpj: "05.313.670/0002-12", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 11, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA", ge: "368", cnpj: "34.565.893/0001-34", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 12, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "IRMAOS OLIVEIRA FARMACIA LTDA - FILIAL 01", ge: "368", cnpj: "34.565.893/0002-15", projetos: { mix: true, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 13, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "OLIVEIRA & IBANHEZ LTDA - MATRIZ", ge: "368", cnpj: "40.508.620/0001-69", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 14, associado: "JOSE ANTONIO MOLINA IBANHEZ", loja: "LLI COMERCIO DE MEDICAMENTOS - FILIAL 01", ge: "368", cnpj: "30.345.678/0001-XX", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 15, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA ULTRA POPULAR PEIXOTO", ge: "27", cnpj: "20.330.018/0001-69", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 16, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ULTRA POPULAR PRIMEIRO DE MARCO", ge: "27", cnpj: "44.396.290/0001-00", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: false, especiais: false, fideliza: false } },
+          { id: 17, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DESCONTO FACIL COMERCIO", ge: "27", cnpj: "29.802.416/0001-05", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: true, especiais: false, fideliza: false } },
+          { id: 18, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA PANTANAL LTDA - MATRIZ", ge: "27", cnpj: "08.273.660/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 19, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "ARAUJO & SILVA LTDA", ge: "27", cnpj: "18.528.172/0001-71", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: false, fideliza: false } },
+          { id: 20, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "M F GURGEL ARAUJO - ME", ge: "27", cnpj: "23.585.408/0001-78", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: true, marcasProprias: true, gc: true, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 21, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J.C.C. MEDICAMENTOS LTDA-ME", ge: "27", cnpj: "08.383.511/0001-41", projetos: { mix: false, precificacao: false, pbm: true, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: false, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 22, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "J C ARAUJO LTDA - MATRIZ", ge: "27", cnpj: "27.202.935/0001-45", projetos: { mix: false, precificacao: false, pbm: false, pec: true, setorizacao: false, marcasProprias: true, gc: false, delivery: false, inspire: true, dermaclub: true, servicos: true, idoso: true, especiais: true, fideliza: false } },
+          { id: 23, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA SAUDE TOTAL", ge: "27", cnpj: "12.345.678/0001-90", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 24, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA BEM ESTAR", ge: "27", cnpj: "98.765.432/0001-10", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 25, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA VIDA NOVA", ge: "27", cnpj: "11.223.344/0001-55", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 26, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA POPULAR CENTRO", ge: "27", cnpj: "55.667.788/0001-99", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 27, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA NOVA ERA", ge: "27", cnpj: "99.887.766/0001-22", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 28, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "FARMACIA SAO JOAO", ge: "27", cnpj: "33.445.566/0001-77", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } },
+          { id: 29, associado: "ZELIA REGINA BIESKI ARAUJO", loja: "DROGARIA CENTRAL", ge: "27", cnpj: "77.889.900/0001-33", projetos: { mix: false, precificacao: false, pbm: false, pec: false, setorizacao: false, marcasProprias: false, gc: false, delivery: false, inspire: false, dermaclub: false, servicos: false, idoso: false, especiais: false, fideliza: false } }
         ];
 
+        // Componentes Auxiliares
         const ProjectBadge = ({ status, label, onClick }) => {
           let bgColor = "", icon = null;
           if (status === 'low_priority') { bgColor = "bg-slate-50 text-slate-400 border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 hover:bg-slate-100 cursor-pointer"; icon = <MinusCircle size={12} />; }
@@ -840,11 +881,19 @@
             const savedData = localStorage.getItem('contingencyDataV4');
             if (savedData) { setAssociados(JSON.parse(savedData)); } 
             else {
-                // Se não tiver dados, inicia vazio
-                setAssociados([]);
+                const processedData = initialDataRaw.map(item => {
+                  const newProjetos = {};
+                  Object.keys(item.projetos).forEach(key => {
+                    const val = item.projetos[key];
+                    if (val === true || val === 'pending') newProjetos[key] = 'priority_todo';
+                    else newProjetos[key] = 'low_priority';
+                  });
+                  return { ...item, projetos: newProjetos };
+                });
+                setAssociados(processedData);
             }
           }, []);
-
+          
           React.useEffect(() => { if (associados.length > 0) localStorage.setItem('contingencyDataV4', JSON.stringify(associados)); }, [associados]);
 
           const handleAddNew = () => { setEditingId(null); setIsModalOpen(true); };
@@ -863,14 +912,22 @@
 
           const handleExportXLSX = () => {
               const exportData = associados.map(item => {
-                  const row = { CNPJ: item.cnpj || '', GE: item.ge || '', ASSOCIADO: item.associado || '', "NOME LOJA": item.loja || '' };
-                  EXCEL_COLUMNS.slice(4).forEach(col => { row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE'; });
+                  const row = {
+                      CNPJ: item.cnpj || '',
+                      GE: item.ge || '',
+                      ASSOCIADO: item.associado || '',
+                      "NOME LOJA": item.loja || ''
+                  };
+                  EXCEL_COLUMNS.slice(4).forEach(col => { 
+                      row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE';
+                  });
                   return row;
               });
               const wb = XLSX.utils.book_new();
               const ws = XLSX.utils.json_to_sheet(exportData);
-              const wscols = Object.keys(exportData[0] || {}).map(k => ({ wch: k.length + 5 }));
+              const wscols = Object.keys(exportData[0]).map(k => ({ wch: k.length + 5 }));
               ws['!cols'] = wscols;
+
               XLSX.utils.book_append_sheet(wb, ws, "Contingencia");
               XLSX.writeFile(wb, "Modelo_Contingencia_CO.xlsx");
           };
@@ -886,7 +943,6 @@
                   const wsname = wb.SheetNames[0];
                   const ws = wb.Sheets[wsname];
                   const data = XLSX.utils.sheet_to_json(ws);
-
                   if (data.length > 0) {
                       let currentId = Math.max(...associados.map(a => a.id), 0) + 1;
                       const newEntries = data.map(row => {
@@ -896,7 +952,14 @@
                               const val = row[label] ? row[label].toString().toUpperCase().trim() : '';
                               projetos[key] = STATUS_MAP_REVERSE[val] || 'low_priority';
                           });
-                          return { id: currentId++, associado: row['ASSOCIADO'] || '', loja: row['NOME LOJA'] || '', ge: row['GE'] ? row['GE'].toString() : '', cnpj: row['CNPJ'] ? row['CNPJ'].toString() : '', projetos };
+                          return {
+                              id: currentId++,
+                              associado: row['ASSOCIADO'] || '',
+                              loja: row['NOME LOJA'] || '',
+                              ge: row['GE'] ? row['GE'].toString() : '',
+                              cnpj: row['CNPJ'] ? row['CNPJ'].toString() : '',
+                              projetos
+                          };
                       });
                       setAssociados(prev => [...prev, ...newEntries]);
                       alert(`${newEntries.length} lojas importadas com sucesso!`);
@@ -942,11 +1005,14 @@
           const doingList = associados.filter(a => a.projetos[selectedProject] === 'priority_doing');
           const doneList = associados.filter(a => a.projetos[selectedProject] === 'priority_done');
 
+          const pilotStores = associados.slice(0, 5);
+
           return (
-            <div className="font-sans text-slate-800 pb-20">
-              <div className="relative overflow-hidden mb-8 shadow-lg rounded-xl">
+            <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
+              <div className="relative overflow-hidden mb-8 shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FF5510] to-[#FF8040]"></div>
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white opacity-10 blur-3xl"></div>
+                
                 <div className="relative max-w-7xl mx-auto px-6 py-10 md:py-12">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div>
@@ -964,13 +1030,13 @@
                         <button onClick={handleExportXLSX} className="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm" title="Baixar Modelo Excel (.xlsx)"><Download size={20} /></button>
                         <button onClick={handleImportClick} className="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm" title="Importar Excel (.xlsx)"><Upload size={20} /></button>
                         <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-                        <button onClick={handleAddNew} className="bg-white text-[#FF5510] hover:bg-orange-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105 flex items-center gap-2"><Plus size={20} />Adicionar</button>
+                        <button onClick={handleAddNew} className="bg-white text-[#FF5510] hover:bg-orange-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform hover:scale-105 flex items-center gap-2"><Plus size={20} />Adicionar Loja</button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="max-w-7xl mx-auto px-1">
+              <div className="max-w-7xl mx-auto px-6">
                 <div className="flex flex-wrap gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-center justify-center md:justify-start select-none">
                   <span className="text-sm font-bold text-slate-700 mr-2">Status:</span>
                   <div className="flex items-center gap-2 text-xs md:text-sm text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200"><MinusCircle size={14} /><span>Baixa</span></div>
@@ -1005,12 +1071,13 @@
                   <button onClick={() => setViewMode('pipeline')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'pipeline' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><LayoutList size={18} />Visão Esteira</button>
                   <button onClick={() => setViewMode('grid')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'grid' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><Grip size={18} />Batalha Naval</button>
                   <button onClick={() => setViewMode('project_report')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'project_report' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><Filter size={18} />Relatório por Projeto</button>
+                  <button onClick={() => setViewMode('pilot_project')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${viewMode === 'pilot_project' ? 'bg-[#FF5510] text-white shadow-md shadow-orange-200' : 'text-slate-600 hover:bg-slate-50'}`}><Rocket size={18} />Projeto Piloto</button>
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
                   
                   {viewMode === 'pipeline' && (
-                    <div className="p-8">
+                     <div className="p-8">
                       <div className="flex items-center justify-between mb-8">
                         <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3"><div className="p-2 bg-orange-100 rounded-lg text-[#FF5510]"><BarChart3 size={20}/></div>Painel de Acompanhamento</h3>
                       </div>
@@ -1049,17 +1116,17 @@
                   )}
 
                   {viewMode === 'grid' && (
-                    <div className="overflow-x-auto">
+                     <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left border-collapse">
                         <thead className="bg-slate-50 text-slate-600 font-semibold">
                           <tr>
                             <th className="px-4 py-5 min-w-[50px] border-b border-slate-200 text-center">Ações</th>
                             <th className="px-6 py-5 min-w-[220px] border-b border-slate-200 align-bottom">Associado / Loja</th>
                             <th className="px-4 py-5 min-w-[100px] border-b border-slate-200 align-bottom text-center">G.E / CNPJ</th>
-                            {Object.values(projectLabels).map((label) => (
+                             {Object.values(projectLabels).map((label) => (
                               <th key={label} className="px-1 py-4 border-b border-slate-200 text-center align-bottom">
                                 <div className="h-32 flex items-end justify-center pb-2">
-                                   <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }} className="text-xs uppercase tracking-wider whitespace-nowrap">{label}</span>
+                                    <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }} className="text-xs uppercase tracking-wider whitespace-nowrap">{label}</span>
                                 </div>
                               </th>
                             ))}
@@ -1088,7 +1155,7 @@
                                 {Object.entries(item.projetos).map(([key, status]) => (
                                   <td key={key} onClick={() => togglePriorityStatus(item.id, key)} className="px-2 py-3 text-center border-r border-slate-50/50 cursor-pointer hover:bg-white transition-all" title="Clique para alterar status">
                                     <div className="flex justify-center transform hover:scale-110 transition-transform">
-                                      {status === 'priority_done' ? <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm"><Check size={16} strokeWidth={3} /></div> : 
+                                       {status === 'priority_done' ? <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm"><Check size={16} strokeWidth={3} /></div> : 
                                        status === 'priority_doing' ? <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#FF5510] flex items-center justify-center shadow-sm border border-orange-200"><Hammer size={16} /></div> : 
                                        status === 'priority_todo' ? <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shadow-sm border border-red-200"><AlertTriangle size={16} /></div> : 
                                        <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-300 hover:text-slate-400 hover:bg-slate-100 flex items-center justify-center border border-transparent hover:border-slate-200 transition-all"><MinusCircle size={12} /></div>}
@@ -1119,6 +1186,7 @@
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
                             {/* COLUNA A FAZER */}
                             <div className="bg-red-50/50 rounded-2xl border border-red-100 overflow-hidden flex flex-col h-[600px]">
                                 <div className="bg-red-100/80 px-6 py-4 border-b border-red-200 flex justify-between items-center shrink-0">
@@ -1175,6 +1243,69 @@
                         </div>
                     </div>
                   )}
+
+                  {/* NOVO CONTEÚDO DA ABA PROJETO PILOTO */}
+                  {viewMode === 'pilot_project' && (
+                    <div className="p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3"><div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Rocket size={20}/></div>Lojas em Piloto</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl">
+                                <h4 className="font-bold text-blue-800 text-lg mb-2">Objetivo do Piloto</h4>
+                                <p className="text-slate-600 text-sm">Acompanhamento focado nas lojas selecionadas para validação de novos processos de Mix e Precificação. O objetivo é atingir 90% de conformidade em 30 dias.</p>
+                            </div>
+                            <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl">
+                                <h4 className="font-bold text-indigo-800 text-lg mb-2">Metas do Piloto</h4>
+                                <ul className="text-slate-600 text-sm list-disc pl-5 space-y-1">
+                                    <li>Implementação completa do PBM</li>
+                                    <li>Revisão de precificação semanal</li>
+                                    <li>Adesão ao cartão fidelidade</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-6 py-4">Associado / Loja</th>
+                                        <th className="px-6 py-4 text-center">G.E</th>
+                                        <th className="px-6 py-4 text-center">Progresso Geral</th>
+                                        <th className="px-6 py-4 text-center">Status Piloto</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {pilotStores.map(item => {
+                                        const stats = calculateStats(item.projetos);
+                                        const progress = stats.totalPriority > 0 ? Math.round((stats.doneCount / stats.totalPriority) * 100) : 0;
+                                        return (
+                                            <tr key={item.id} className="hover:bg-slate-50">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-slate-700">{item.associado}</div>
+                                                    <div className="text-xs text-slate-400">{item.loja}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center font-semibold text-slate-600">{item.ge}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-full bg-slate-100 rounded-full h-2">
+                                                            <div className={`h-2 rounded-full ${progress >= 80 ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}></div>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-600">{progress}%</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Em Acompanhamento</span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                  )}
+
                 </div>
               </div>
 
@@ -1183,7 +1314,7 @@
           );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('react-root'));
+        const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<ContingencyPlan />);
     </script>
 </body>
