@@ -3,35 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Integrado Farmarcas</title>
+    <title>Sistema Integrado Farmarcas - Centro Oeste</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
-
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+
     <style>
-        /* --- ESTILOS GERAIS DE NAVEGAÇÃO --- */
-        body { background-color: #f3f4f6; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        .main-nav {
-            background-color: #1e293b; color: white; padding: 0.75rem 1.5rem;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50;
-        }
-        
+        /* Estilos da Navegação Superior */
         .nav-btn {
-            padding: 0.5rem 1rem; border-radius: 0.5rem; font-family: 'Inter', sans-serif;
-            font-weight: 500; font-size: 0.875rem; transition: all 0.2s; cursor: pointer;
-            border: 1px solid transparent; background-color: transparent; color: #cbd5e1;
-            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            color: #64748b;
         }
-        .nav-btn:hover { background-color: #334155; color: white; }
+        .nav-btn:hover { color: #FF5510; background-color: #fff1eb; }
+        .nav-btn.active {
+            border-bottom-color: #FF5510;
+            color: #FF5510;
+            background-color: #fff;
+        }
+
+        /* Utilitários do Dashboard 2 */
+        .status-select {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
+            appearance: none; -webkit-appearance: none;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px;
+        }
+        .status-default { background-color: #f3f4f6; color: #4b5563; }
+        .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+        .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
+        .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        
+        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
+        
+        .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        .hidden-view { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-[#FF5510] rounded-lg flex items-center justify-center text-white font-bold"><i class="fa-solid fa-layer-group"></i></div>
+                        <span class="font-bold text-xl tracking-tight text-slate-800">Sistema CO</span>
+                    </div>
+                    <div class="hidden md:flex ml-10 space-x-1">
+                        <button id="nav-contingencia" class="nav-btn active" onclick="switchTab('contingencia')">Painel de Contingência</button>
+                        <button id="nav-projetos" class="nav-btn" onclick="switchTab('projetos')">Dashboard Projetos (Firebase)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="view-contingencia" class="view-section">
+        <div id="root"></div>
+    </div>
+
+    <div id="view-projetos" class="view-section hidden-view">
+        
+        <aside id="filter-sidebar" class="fixed top-16 left-0 z-30 w-72 h-[calc(100vh-64px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto border-r border-slate-200">
+            <h3 class="text-xl font-extrabold text-gray-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-filter text-[#FF5510]"></i> Filtros</h3>
+            <div class="space-y-4 pr-2">
+                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Filtrar CNPJ"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Filtrar Loja"></div>
+            </div>
+            <div class="mt-6 space-y-3">
+                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E] transition shadow-sm">Aplicar Filtros</button>
+                <button id="clear-filters-btn" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Limpar Filtros</button>
+            </div>
+        </aside>
+
+        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6 min-h-screen bg-gray-50/50">
+            <header class="mb-6">
+                <nav class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex justify-between items-center mb-6">
+                    <div class="flex items-center">
+                        <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
+                        <h1 class="text-2xl font-extrabold text-slate-800">Dashboard Online</h1>
+                    </div>
+                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow-sm transition transform hover:scale-105">
+                        <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                    </button>
+                </nav>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-black">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-red-500">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-yellow-400">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pendente Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                    </div>
+                </div>
+            </header>
+
+            <section class="mb-6 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-area text-slate-400"></i> Gráfico Consolidado</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                    <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50"></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50"><option value="">Todos</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50" placeholder="CNPJ ou Loja"></div>
+                    <button id="generate-chart-btn" class="bg-slate-800 text-white py-2 px-4 rounded-lg font-semibold hover:bg-slate-900 h-10 w-full transition">Gerar Gráfico</button>
+                </div>
+                <div class="relative h-80"><canvas id="consolidated-chart"></canvas></div>
+            </section>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 bg-gray-50/50">
+                    <div class="relative max-w-md">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" id="search-input" placeholder="Pesquisar loja, CNPJ ou ID..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510] outline-none transition">
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky-header">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                                <th class="px
