@@ -3,45 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Integrado Farmarcas - Sincronizado</title>
+    <title>Dashboard Integrado - Farmarcas & CO</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .nav-btn { padding: 0.75rem 1.5rem; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.3s; cursor: pointer; color: #64748b; }
-        .nav-btn:hover { color: #FF5510; background-color: #fff1eb; }
-        .nav-btn.active { border-bottom-color: #FF5510; color: #FF5510; background-color: #fff; }
-        .hidden-view { display: none !important; }
-        /* Utilitários Dashboard 2 */
-        .status-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500; appearance: none; -webkit-appearance: none; background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px; }
+        /* Base Styles */
+        body { font-family: 'Rubik', sans-serif; background-color: #f3f4f6; }
+        
+        /* Estilos do Dashboard 1 */
+        .status-select {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
+            appearance: none; -webkit-appearance: none;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px;
+        }
         .status-default { background-color: #f3f4f6; color: #4b5563; }
         .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
         .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
         .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
         .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        
         .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
         .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        
+        /* Estilos de Scrollbar e Utilitários */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        #toast { transition: transform 0.3s, opacity 0.3s; }
+        .obs-filled { color: #3b82f6; }
+        
+        /* Estilos específicos Dashboard 2 (React) */
+        .react-wrapper { font-family: 'Inter', sans-serif; }
         .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        
+        /* Controle de Abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom: 2px solid #FF5510; color: #FF5510; font-weight: bold; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-gray-100 h-screen overflow-hidden flex flex-col">
+
+    <nav class="bg-white border-b border-gray-200 px-6 py-3 shrink-0 flex justify-between items-center shadow-sm z-50">
+        <div class="flex items-center gap-6">
+            <span class="text-lg font-extrabold text-[#FF5510] mr-4">Farmarcas Integrado</span>
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active pb-1 text-gray-600 hover:text-gray-800 transition-all">
+                <i class="fa-solid fa-chart-pie mr-2"></i>Dashboard Projetos
+            </button>
+            <button onclick="switchTab('contingencia')" id="btn-contingencia" class="tab-btn pb-1 text-gray-600 hover:text-gray-800 transition-all">
+                <i class="fa-solid fa-bullseye mr-2"></i>Painel Contingência (CO)
+            </button>
+        </div>
+        <div class="text-xs text-gray-400">v2.0 Sync</div>
+    </nav>
+
+    <div class="flex-1 overflow-hidden relative">
+
+        <div id="tab-dashboard" class="tab-content active h-full overflow-auto">
+            <div class="flex h-full">
+                <aside id="filter-sidebar" class="fixed inset-y-0 left-0 z-30 w-72 bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 md:relative mt-[50px] md:mt-0 h-full overflow-y-auto">
+                    <h3 class="text-xl font-extrabold text-gray-800 mb-6">Filtros</h3>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Associado</label><select id="filter-associado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">UF</label><select id="filter-uf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Anjo</label><select id="filter-anjo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Bandeira</label><select id="filter-bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">CNPJ</label><input type="text" id="filter-cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Filtrar CNPJ"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Loja</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Filtrar Loja"></div>
+                    </div>
+                    <div class="mt-6 space-y-3 pb-10">
+                        <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E]">Aplicar Filtros</button>
+                        <button id="clear-filters-btn" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Limpar Filtros</button>
+                    </div>
+                </aside>
+
+                <main id="main-content" class="flex-1 transition-all duration-300 p-6 overflow-y-auto h-full">
+                    <header class="mb-6">
+                        <nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6">
+                            <div class="flex items-center">
+                                <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
+                                <h1 class="text-3xl font-extrabold text-[#FF5510]">Dashboard Online</h1>
+                            </div>
+                            <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow">
+                                <i class="fa-solid fa-plus"></i><span>Inserir Loja</span>
+                            </button>
+                        </nav>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-black">
+                                <h4 class="text-sm font-medium text-gray-500 uppercase">Total de Lojas</h4><p id="kpi-total-lojas" class="text-3xl font-extrabold text-gray-900">0</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500">
+                                <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-3xl font-extrabold text-gray-900">0</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-400">
+                                <h4 class="text-sm font-medium text-gray-500 uppercase">Pendentes Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-3xl font-extrabold text-gray-900">0</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                                <h4 class="text-sm font-medium text-gray-500 uppercase">Em Andamento</h4><p id="kpi-em-andamento" class="text-3xl font-extrabold text-gray-900">0</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
+                                <h4 class="text-sm font-medium text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-3xl font-extrabold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <section class="mb-6 bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+                            <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"><option value="">Todos</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="CNPJ ou Loja"></div>
+                            <button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full">Gerar Gráfico</button>
+                        </div>
+                        <div class="relative h-96"><canvas id="consolidated-chart"></canvas></div>
+                    </section>
+
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-10">
+                        <div class="p-4 border-b">
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                                <input type="text" id="search-input" placeholder="Pesquisar..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FF5510]">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto max-h-[600px]">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky-header">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                                    <tr><td colspan="29" class="text-center p-8 text-gray-500">Carregando dados...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <div id="tab-contingencia" class="tab-content h-full overflow-y-auto bg-slate-50 react-wrapper">
+            <div id="root"></div>
+        </div>
+        
+    </div>
+
+    <div id="toast" class="fixed top-6 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-[60]">Msg</div>
+
+    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800"><i class="fa-solid fa-times fa-lg"></i></button>
+            </header>
+            <form id="store-form" class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">Analista</label><input type="text" id="analista" name="analista" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">GE</label><input type="text" id="ge" name="ge" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">Associado</label><input type="text" id="associado" name="associado" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        
+                        <div id="form-project-group">
+                            <label class="block text-sm font-medium">Projeto</label>
+                            <select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border">
+                                <option value="" disabled selected>Carregando projetos...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></div>
+                        <div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border"></textarea></div>
+                    </div>
+                </div>
+            </form>
+            <footer class="flex justify-end p-5 border-t bg-gray-50">
+                <button id="cancel-modal-btn" class="bg-gray-200 text-gray-700 py-2 px-5 rounded mr-3">Cancelar</button>
+                <button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white py-2 px-5 rounded shadow">Salvar</button>
+            </footer>
+        </div>
+    </div>
+
+    <div id="chart-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
+            <header class="flex justify-between items-center p-5 border-b">
+                <h2 id="chart-modal-title" class="text-xl font-bold">Gráfico</h2>
+                <button id="close-chart-modal-btn" class="text-gray-500"><i class="fa-solid fa-times"></i></button>
+            </header>
+            <div class="p-6">
+                <div class="mb-4 flex justify-center space-x-6">
+                    <label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label>
+                    <label><input type="radio" name="chart-format" value="currency" class="mr-2">Moeda</label>
+                    <label><input type="radio" name="chart-format" value="percent" class="mr-2">%</label>
+                </div>
+                <canvas id="indicator-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="obs-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <header class="flex justify-between items-center p-5 border-b"><h2 id="obs-modal-title" class="font-bold">Obs</h2></header>
+            <div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded p-2"></textarea></div>
+            <footer class="flex justify-end p-5 border-t"><button id="cancel-obs-btn" class="bg-gray-200 px-4 py-2 rounded mr-2">Cancelar</button><button id="save-obs-btn" class="bg-[#FF5510] text-white px-4 py-2 rounded">Salvar</button></footer>
+        </div>
+    </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4">Excluir?</h2>
+            <p id="delete-modal-text" class="mb-6">Tem certeza?</p>
+            <div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('btn-' + tabName).classList.add('active');
+        }
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE
+        // =========================================================
         const firebaseConfig = {
             apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM",
             authDomain: "dashboardprojetos-a749c.firebaseapp.com",
@@ -54,140 +294,63 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const dbRef = ref(db, 'dashboard_projetos_v1');
+        const dbRefContingencia = ref(db, 'contingencia_v1');
 
-        // Expor para o escopo global (para o React e Vanilla JS acessarem)
-        window.FB_DB = db;
-        window.FB_REF = ref;
-        window.FB_SET = set;
-        window.FB_ONVALUE = onValue;
-
-        // Disparar evento para avisar o React que o Firebase está pronto
+        // EXPOR FUNÇÕES PARA O REACT (GLOBAL WINDOW)
+        window.firebaseDB = db;
+        window.saveContingencyData = (data) => {
+            set(dbRefContingencia, data).catch(err => console.error("Erro Firebase Contingencia:", err));
+        };
+        window.listenContingencyData = (callback) => {
+            onValue(dbRefContingencia, (snapshot) => {
+                const val = snapshot.val();
+                callback(val);
+            });
+        };
+        // Dispara evento informando que Firebase está pronto
         window.dispatchEvent(new Event('firebase-ready'));
-    </script>
 
-    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-[#FF5510] rounded-lg flex items-center justify-center text-white font-bold"><i class="fa-solid fa-layer-group"></i></div>
-                        <span class="font-bold text-xl tracking-tight text-slate-800">Sistema Integrado</span>
-                    </div>
-                    <div class="hidden md:flex ml-10 space-x-1">
-                        <button id="nav-contingencia" class="nav-btn active" onclick="switchTab('contingencia')">Painel de Contingência (Firebase)</button>
-                        <button id="nav-projetos" class="nav-btn" onclick="switchTab('projetos')">Dashboard Projetos (Firebase)</button>
-                    </div>
-                </div>
-                <div id="sync-status" class="flex items-center text-xs text-green-600 font-bold px-3"><i class="fa-solid fa-circle text-[8px] mr-2"></i>Conectado</div>
-            </div>
-        </div>
-    </nav>
 
-    <div id="view-contingencia" class="view-section">
-        <div id="root"></div>
-    </div>
-
-    <div id="view-projetos" class="view-section hidden-view">
-        <aside id="filter-sidebar" class="fixed top-16 left-0 z-30 w-72 h-[calc(100vh-64px)] bg-white shadow-lg p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto border-r border-slate-200">
-            <h3 class="text-xl font-extrabold text-gray-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-filter text-[#FF5510]"></i> Filtros</h3>
-            <div class="space-y-4 pr-2">
-                <div><label class="block text-sm font-medium text-gray-700">Analista</label><select id="filter-analista" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">GE</label><select id="filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Projeto</label><select id="filter-projeto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></select></div>
-                <div><label class="block text-sm font-medium text-gray-700">Busca</label><input type="text" id="filter-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Loja, CNPJ..."></div>
-            </div>
-            <div class="mt-6 space-y-3">
-                <button id="apply-filters-btn" class="w-full bg-[#FF5510] text-white py-2 rounded-lg font-semibold hover:bg-[#E04A0E] transition shadow-sm">Aplicar</button>
-                <button id="clear-filters-btn" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Limpar</button>
-            </div>
-        </aside>
-
-        <main id="main-content" class="md:ml-72 transition-all duration-300 p-6 min-h-screen bg-gray-50/50">
-            <header class="mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <button id="toggle-filter-btn" class="md:hidden mr-4 text-gray-600"><i class="fa-solid fa-bars fa-lg"></i></button>
-                    <button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-5 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow-sm"><i class="fa-solid fa-plus"></i><span>Nova Loja</span></button>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-black"><h4 class="text-xs font-bold text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendente</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Finalizado</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-900">0</p></div>
-                </div>
-            </header>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky-header">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th>
-                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="toast" class="fixed top-20 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-[60]">Msg</div>
-    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden modal-overlay">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <header class="p-6 border-b bg-gray-50 flex justify-between"><h2 class="text-xl font-bold">Gerenciar Loja</h2><button id="close-modal-btn" class="text-gray-400"><i class="fa-solid fa-times"></i></button></header>
-            <form id="store-form" class="p-6 overflow-y-auto space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">Analista</label><input type="text" name="analista" class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium">GE</label><input type="text" name="ge" class="w-full border rounded p-2"></div>
-                </div>
-                <div><label class="block text-sm font-medium">Projeto</label><select id="nome-projeto" name="nome-projeto" required class="w-full border rounded p-2 bg-white"></select></div>
-                <div><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="w-full border rounded p-2"></div>
-            </form>
-            <footer class="p-6 border-t bg-gray-50 flex justify-end"><button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white px-5 py-2 rounded-lg">Salvar</button></footer>
-        </div>
-    </div>
-
-    <script>
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`nav-${tab}`).classList.add('active');
-            document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden-view'));
-            document.getElementById(`view-${tab}`).classList.remove('hidden-view');
-        }
-    </script>
-
-    <script type="text/babel">
-        // Ícones Simplificados
-        const IconBase = ({ children, size=18, className="", ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
-        const AlertTriangle = (props) => (<IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
-        const Hammer = (props) => (<IconBase {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
-        const CheckCircle2 = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
-        const MinusCircle = (props) => (<IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
-        const Save = (props) => (<IconBase {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
-        const XIcon = (props) => (<IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
-        const Pencil = (props) => (<IconBase {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
-        const Trash2 = (props) => (<IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
-
-        const projectLabels = { mix: "Mix", precificacao: "Preço", pbm: "PBM", pec: "PEC", setorizacao: "Setor.", marcasProprias: "Marcas", gc: "GC", delivery: "Deliv.", inspire: "Inspire", dermaclub: "Derma", servicos: "Serv.", idoso: "Idoso", especiais: "Espec.", fideliza: "Fidel." };
+        // =========================================================
+        // LÓGICA DO DASHBOARD DE PROJETOS (TAB 1)
+        // =========================================================
+        const projectList = [
+            "MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", 
+            "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", 
+            "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", 
+            "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", 
+            "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"
+        ];
         
-        function ContingencyPlan() {
-            const [associados, setAssociados] = React.useState([]);
-            const [isModalOpen, setIsModalOpen] = React.useState(false);
-            const [editingId, setEditingId] = React.useState(null);
-            
-            // --- CONEXÃO FIREBASE PARA O REACT ---
-            React.useEffect(() => {
-                const initFirebase = () => {
-                    if (window.FB_DB) {
-                        const dbRef = window.FB_REF(window.FB_DB, 'painel_contingencia_v1');
-                        window.FB_ONVALUE(dbRef, (snapshot) => {
-                            const data = snapshot.val();
-                            if (data) {
-                                // Converter objeto para array se necessário
+        function initDropdowns() {
+            const pSelects = [
+                document.getElementById('filter-projeto'), 
+                document.getElementById('chart-filter-project'), 
+                document.getElementById('nome-projeto')
+            ];
+            pSelects.forEach(sel => {
+                if(!sel) return;
+                if (sel.id === 'nome-projeto') {
+                    sel.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
+                } else {
+                    sel.innerHTML = '<option value="">Todos os Projetos</option>';
+                }
+                projectList.forEach(p => sel.add(new Option(p, p)));
+            });
+        }
+        initDropdowns();
+
+        let allStoresData = []; 
+        let allFlattenedData = [];
+        let currentChartInstance = null; 
+        let consolidatedChartInstance = null;
+        let currentChartRowData = null;
+
+        const statusList = [{val:'pendente', txt:'Pendente', cls:'status-pendente'}, {val:'andamento', txt:'Em Andamento', cls:'status-andamento'}, {val:'pendente-associa', txt:'Pendente Assoc.', cls:'status-pendente-associa'}, {val:'finalizado', txt:'Finalizado', cls:'status-finalizado'}];
+        const indicatorMonths = [
+            { id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' },
+            { id: 'nov2025', label: 'Nov/25' }, { id: 'dec2025', label: 'Dez/25' }, { id: 'jan2026', label: 'Jan/26' },
+            { id: 'feb2026', label: 'Fev/26' }, { id: 'mar2026', label: 'Mar/26' }, { id: 'apr2026', label: 'Abr/26' },
+            { id: 'may2026', label: 'Mai/26' }, { id: 'jun2026', label: 'Jun/26' }, { id: 'jul2026', label: 'Jul/26' },
+            { id: 'aug2026',
