@@ -16,4 +16,182 @@
             background-color: inherit; border: none; outline: none; cursor: pointer;
             padding: 14px 20px; transition: 0.3s; font-size: 16px; color: white; flex: 1;
         }
-        .tab-
+        .tab-btn:hover { background-color: #2c3e50; }
+        .tab-btn.active { background-color: #3498db; font-weight: bold; }
+
+        /* Conteúdo das Abas */
+        .tab-content { display: none; padding: 20px; animation: fadeEffect 0.5s; }
+        .tab-content.active-content { display: block; }
+
+        /* Tabelas */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* Filtros */
+        .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .filter-input {
+            padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 4px;
+        }
+        
+        /* Status Badges */
+        .status { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white;}
+        .concluido { background-color: #27ae60; }
+        .pendente { background-color: #f39c12; }
+        .atrasado { background-color: #c0392b; }
+        .futuro { background-color: #7f8c8d; }
+
+        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+    </style>
+</head>
+<body>
+
+<div class="tab-container">
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="openTab(event, 'cronograma')">Cronograma e Treinamentos</button>
+        <button class="tab-btn" onclick="openTab(event, 'piloto')">Projeto Piloto (Filtros)</button>
+        <button class="tab-btn" onclick="openTab(event, 'batalha')">Batalha Naval (Filtros)</button>
+    </div>
+
+    <div id="cronograma" class="tab-content active-content">
+        <h2>📅 Cronograma de Treinamentos (2025-2026)</h2>
+        <p>Visualização das atividades a partir de Outubro de 2025.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Atividade / Treinamento</th>
+                    <th>Responsável</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>05/10/2025</td><td>Kick-off: Planejamento Q4</td><td>Ana Silva</td><td><span class="status futuro">Agendado</span></td></tr>
+                <tr><td>20/10/2025</td><td>Workshop: Novas Ferramentas</td><td>Carlos TI</td><td><span class="status futuro">Agendado</span></td></tr>
+                <tr><td>15/11/2025</td><td>Treinamento: Segurança de Dados</td><td>Equipe Security</td><td><span class="status futuro">Agendado</span></td></tr>
+                <tr><td>10/12/2025</td><td>Revisão Anual e Fechamento</td><td>Diretoria</td><td><span class="status futuro">Planejado</span></td></tr>
+                
+                <tr><td>15/01/2026</td><td>Início do Ciclo 2026</td><td>Ana Silva</td><td><span class="status futuro">Planejado</span></td></tr>
+                <tr><td>10/02/2026</td><td>Treinamento Avançado: Módulo A</td><td>Instrutor Externo</td><td><span class="status futuro">Planejado</span></td></tr>
+                <tr><td>20/03/2026</td><td>Hackathon Interno</td><td>Inovação</td><td><span class="status futuro">Planejado</span></td></tr>
+                <tr><td>05/06/2026</td><td>Avaliação Semestral</td><td>RH</td><td><span class="status futuro">Planejado</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="piloto" class="tab-content">
+        <h2>🚀 Projeto Piloto</h2>
+        
+        <div class="filter-container">
+            <label><strong>Filtrar Tarefas:</strong></label>
+            <input type="text" id="inputPiloto" onkeyup="filtrarTabela('tablePiloto', 'inputPiloto')" class="filter-input" placeholder="Busque por nome, status ou responsável...">
+        </div>
+
+        <table id="tablePiloto">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tarefa</th>
+                    <th>Responsável</th>
+                    <th>Prazo</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>001</td><td>Mapeamento de Requisitos</td><td>João</td><td>01/09/2025</td><td><span class="status concluido">Concluído</span></td></tr>
+                <tr><td>002</td><td>Desenvolvimento Front-end</td><td>Maria</td><td>15/09/2025</td><td><span class="status pendente">Em Andamento</span></td></tr>
+                <tr><td>003</td><td>Testes de Integração</td><td>Carlos</td><td>20/09/2025</td><td><span class="status atrasado">Atrasado</span></td></tr>
+                <tr><td>004</td><td>Validação com Cliente</td><td>Ana</td><td>30/09/2025</td><td><span class="status pendente">Pendente</span></td></tr>
+                <tr><td>005</td><td>Deploy em Produção</td><td>DevOps</td><td>10/10/2025</td><td><span class="status futuro">Agendado</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="batalha" class="tab-content">
+        <h2>⚓ Batalha Naval - Log de Jogadas</h2>
+        
+        <div class="filter-container">
+            <label><strong>Filtrar Jogadas:</strong></label>
+            <input type="text" id="inputBatalha" onkeyup="filtrarTabela('tableBatalha', 'inputBatalha')" class="filter-input" placeholder="Busque por Jogador ou Resultado (ex: Acertou)...">
+        </div>
+
+        <table id="tableBatalha">
+            <thead>
+                <tr>
+                    <th>Rodada</th>
+                    <th>Jogador</th>
+                    <th>Coordenada</th>
+                    <th>Resultado</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Jogador 1</td><td>A5</td><td>Água</td><td>0</td></tr>
+                <tr><td>1</td><td>Jogador 2</td><td>B2</td><td>Água</td><td>0</td></tr>
+                <tr><td>2</td><td>Jogador 1</td><td>C4</td><td><span class="status concluido">Acertou!</span></td><td>100</td></tr>
+                <tr><td>2</td><td>Jogador 2</td><td>D4</td><td>Água</td><td>0</td></tr>
+                <tr><td>3</td><td>Jogador 1</td><td>C5</td><td><span class="status concluido">Afundou!</span></td><td>300</td></tr>
+                <tr><td>3</td><td>Jogador 2</td><td>A1</td><td><span class="status concluido">Acertou!</span></td><td>100</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // Função para alternar abas
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active-content");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active-content");
+        evt.currentTarget.className += " active";
+    }
+
+    // Função Genérica de Filtro
+    function filtrarTabela(tabelaId, inputId) {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById(inputId);
+        filter = input.value.toUpperCase();
+        table = document.getElementById(tabelaId);
+        tr = table.getElementsByTagName("tr");
+
+        // Loop por todas as linhas da tabela (começando de 1 para pular o cabeçalho)
+        for (i = 1; i < tr.length; i++) {
+            // Verifica todas as células da linha
+            var linhaVisivel = false;
+            var cells = tr[i].getElementsByTagName("td");
+            
+            for (var j = 0; j < cells.length; j++) {
+                td = cells[j];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        linhaVisivel = true;
+                        break; // Se achou em uma coluna, já serve
+                    }
+                }
+            }
+            
+            if (linhaVisivel) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
