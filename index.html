@@ -3,195 +3,542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão e Treinamentos</title>
+    <title>Sistema Integrado - Farmarcas</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.4.0/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* Estilos Gerais */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        h2 { color: #333; }
+        .font-rubik { font-family: 'Rubik', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+        body { background-color: #f3f4f6; padding-top: 70px; }
         
-        /* Estilo das Abas */
-        .tab-container { background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
-        .tab-buttons { display: flex; background-color: #34495e; }
-        .tab-btn {
-            background-color: inherit; border: none; outline: none; cursor: pointer;
-            padding: 14px 20px; transition: 0.3s; font-size: 16px; color: white; flex: 1;
+        /* Dashboard 1 Styles */
+        .status-select {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-weight: 500;
+            appearance: none; -webkit-appearance: none;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='2'%3e%3cpath d='M6 9l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 8px center / 14px;
         }
-        .tab-btn:hover { background-color: #2c3e50; }
-        .tab-btn.active { background-color: #3498db; font-weight: bold; }
-
-        /* Conteúdo das Abas */
-        .tab-content { display: none; padding: 20px; animation: fadeEffect 0.5s; }
-        .tab-content.active-content { display: block; }
-
-        /* Tabelas */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f2f2f2; color: #333; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:hover { background-color: #f1f1f1; }
-
-        /* Filtros */
-        .filter-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .filter-input {
-            padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 4px;
-        }
+        .status-default { background-color: #f3f4f6; color: #4b5563; }
+        .status-pendente { background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        .status-andamento { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+        .status-pendente-associa { background-color: #fef9c3; color: #a16207; border-color: #fde047; }
+        .status-finalizado { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
         
-        /* Status Badges */
-        .status { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white;}
-        .concluido { background-color: #27ae60; }
-        .pendente { background-color: #f39c12; }
-        .atrasado { background-color: #c0392b; }
-        .futuro { background-color: #7f8c8d; }
-
-        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+        .indicator-input-table { width: 70px; padding: 4px; border-radius: 6px; border: 1px solid #d1d5db; text-align: center; background-color: #f9fafb; transition: all 0.2s; }
+        .indicator-input-table:focus { outline: none; border-color: #FF5510; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 85, 16, 0.2); }
+        .sticky-header th { position: sticky; top: 0; background-color: #f9fafb; z-index: 10; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .obs-filled { color: #3b82f6; }
+        
+        /* Tab Logic */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-link { padding: 0.5rem 1rem; margin-right: 0.5rem; font-weight: 600; color: #4b5563; border-bottom: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+        .nav-link:hover { color: #FF5510; background-color: #fff7ed; border-radius: 6px 6px 0 0; }
+        .nav-link.active { color: #FF5510; border-bottom: 3px solid #FF5510; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-rubik">
 
-<div class="tab-container">
-    <div class="tab-buttons">
-        <button class="tab-btn active" onclick="openTab(event, 'cronograma')">Cronograma e Treinamentos</button>
-        <button class="tab-btn" onclick="openTab(event, 'piloto')">Projeto Piloto (Filtros)</button>
-        <button class="tab-btn" onclick="openTab(event, 'batalha')">Batalha Naval (Filtros)</button>
-    </div>
+    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-40 px-6 h-[70px] flex items-center justify-between">
+        <div class="flex items-center">
+            <div class="mr-8 flex flex-col justify-center">
+                <h1 class="text-xl font-extrabold text-[#FF5510] leading-none">Farmarcas</h1>
+                <span class="text-xs text-gray-500 font-medium">Gestão Integrada</span>
+            </div>
+            <nav class="flex h-full items-center">
+                <button onclick="switchTab('dashboard-geral')" id="btn-dashboard-geral" class="nav-link active flex items-center gap-2"><i class="fa-solid fa-chart-pie"></i> Dashboard Geral</button>
+                <button onclick="switchTab('projeto-piloto')" id="btn-projeto-piloto" class="nav-link flex items-center gap-2"><i class="fa-solid fa-rocket"></i> Projeto Piloto</button>
+                <button onclick="switchTab('cronograma')" id="btn-cronograma" class="nav-link flex items-center gap-2"><i class="fa-regular fa-calendar-check"></i> Cronograma & Treinamentos</button>
+            </nav>
+        </div>
+        <div class="text-sm text-gray-400 font-light flex items-center gap-2"><i class="fa-solid fa-wifi"></i> Online</div>
+    </header>
 
-    <div id="cronograma" class="tab-content active-content">
-        <h2>📅 Cronograma de Treinamentos (2025-2026)</h2>
-        <p>Visualização das atividades a partir de Outubro de 2025.</p>
+    <main class="w-full transition-all duration-300">
         
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Atividade / Treinamento</th>
-                    <th>Responsável</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>05/10/2025</td><td>Kick-off: Planejamento Q4</td><td>Ana Silva</td><td><span class="status futuro">Agendado</span></td></tr>
-                <tr><td>20/10/2025</td><td>Workshop: Novas Ferramentas</td><td>Carlos TI</td><td><span class="status futuro">Agendado</span></td></tr>
-                <tr><td>15/11/2025</td><td>Treinamento: Segurança de Dados</td><td>Equipe Security</td><td><span class="status futuro">Agendado</span></td></tr>
-                <tr><td>10/12/2025</td><td>Revisão Anual e Fechamento</td><td>Diretoria</td><td><span class="status futuro">Planejado</span></td></tr>
-                
-                <tr><td>15/01/2026</td><td>Início do Ciclo 2026</td><td>Ana Silva</td><td><span class="status futuro">Planejado</span></td></tr>
-                <tr><td>10/02/2026</td><td>Treinamento Avançado: Módulo A</td><td>Instrutor Externo</td><td><span class="status futuro">Planejado</span></td></tr>
-                <tr><td>20/03/2026</td><td>Hackathon Interno</td><td>Inovação</td><td><span class="status futuro">Planejado</span></td></tr>
-                <tr><td>05/06/2026</td><td>Avaliação Semestral</td><td>RH</td><td><span class="status futuro">Planejado</span></td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div id="piloto" class="tab-content">
-        <h2>🚀 Projeto Piloto</h2>
-        
-        <div class="filter-container">
-            <label><strong>Filtrar Tarefas:</strong></label>
-            <input type="text" id="inputPiloto" onkeyup="filtrarTabela('tablePiloto', 'inputPiloto')" class="filter-input" placeholder="Busque por nome, status ou responsável...">
+        <div id="view-dashboard-geral" class="tab-content active p-6 max-w-[1920px] mx-auto">
+            <details class="bg-white rounded-lg shadow-sm mb-6 border border-gray-200 group">
+                <summary class="list-none flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg"><span class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-filter text-[#FF5510]"></i> Filtros Avançados</span><span class="text-gray-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span></summary>
+                <div class="p-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-6 gap-4 text-sm bg-gray-50 rounded-b-lg">
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Analista</label><select id="filter-analista" class="w-full rounded border-gray-300 text-sm py-1.5"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">GE</label><select id="filter-ge" class="w-full rounded border-gray-300 text-sm py-1.5"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Associado</label><select id="filter-associado" class="w-full rounded border-gray-300 text-sm py-1.5"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">UF</label><select id="filter-uf" class="w-full rounded border-gray-300 text-sm py-1.5"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Projeto</label><select id="filter-projeto" class="w-full rounded border-gray-300 text-sm py-1.5"></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Buscar</label><input type="text" id="filter-loja" class="w-full rounded border-gray-300 text-sm py-1.5" placeholder="Loja..."></div>
+                    <div class="md:col-span-6 flex justify-end"><button id="apply-filters-btn" class="bg-gray-800 text-white py-1.5 px-6 rounded hover:bg-black text-sm font-medium">Aplicar Filtros</button></div>
+                </div>
+            </details>
+            <header class="mb-6"><nav class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center mb-6"><h1 class="text-2xl font-extrabold text-gray-800">Visão Geral</h1><button id="open-modal-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] flex items-center space-x-2 shadow text-sm"><i class="fa-solid fa-plus"></i><span>Inserir Loja</span></button></nav><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"><div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-black"><h4 class="text-xs font-bold text-gray-500 uppercase">Total</h4><p id="kpi-total-lojas" class="text-2xl font-extrabold text-gray-900">0</p></div><div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-red-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendentes</h4><p id="kpi-projetos-pendentes" class="text-2xl font-extrabold text-gray-900">0</p></div><div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-400"><h4 class="text-xs font-bold text-gray-500 uppercase">Pendente Assoc.</h4><p id="kpi-projetos-pendentes-associa" class="text-2xl font-extrabold text-gray-900">0</p></div><div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Andamento</h4><p id="kpi-em-andamento" class="text-2xl font-extrabold text-gray-900">0</p></div><div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500"><h4 class="text-xs font-bold text-gray-500 uppercase">Finalizados</h4><p id="kpi-projetos-finalizados" class="text-2xl font-extrabold text-gray-900">0</p></div></div></header>
+            <section class="mb-6 bg-white rounded-lg shadow-sm p-6"><h2 class="text-xl font-extrabold text-gray-800 mb-4">Gráfico Consolidado</h2><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end"><div><label class="block text-xs font-bold text-gray-700">Projeto</label><select id="chart-filter-project" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"></select></div><div><label class="block text-xs font-bold text-gray-700">GE</label><select id="chart-filter-ge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"><option value="">Todos</option></select></div><div><label class="block text-xs font-bold text-gray-700">Busca</label><input type="text" id="chart-filter-cnpj-loja" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="CNPJ ou Loja"></div><button id="generate-chart-btn" class="bg-[#FF5510] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#E04A0E] h-10 w-full text-sm">Gerar</button></div><div class="relative h-80"><canvas id="consolidated-chart"></canvas></div></section>
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden"><div class="p-4 border-b flex items-center gap-2"><i class="fa-solid fa-search text-gray-400"></i><input type="text" id="search-input" placeholder="Pesquisar..." class="w-full px-2 py-1 outline-none text-gray-700"></div><div class="overflow-x-auto max-h-[calc(100vh-320px)]"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50 sticky-header"><tr><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loja</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">CNPJ</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Analista</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">GE</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Assoc.</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bandeira</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Projeto</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Status</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Meta</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/25</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/25</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/25</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/25</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/25</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jan/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Fev/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mar/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Abr/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Mai/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jun/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Jul/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ago/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Set/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Out/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nov/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Dez/26</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Obs</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th></tr></thead><tbody id="project-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>
         </div>
 
-        <table id="tablePiloto">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tarefa</th>
-                    <th>Responsável</th>
-                    <th>Prazo</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>001</td><td>Mapeamento de Requisitos</td><td>João</td><td>01/09/2025</td><td><span class="status concluido">Concluído</span></td></tr>
-                <tr><td>002</td><td>Desenvolvimento Front-end</td><td>Maria</td><td>15/09/2025</td><td><span class="status pendente">Em Andamento</span></td></tr>
-                <tr><td>003</td><td>Testes de Integração</td><td>Carlos</td><td>20/09/2025</td><td><span class="status atrasado">Atrasado</span></td></tr>
-                <tr><td>004</td><td>Validação com Cliente</td><td>Ana</td><td>30/09/2025</td><td><span class="status pendente">Pendente</span></td></tr>
-                <tr><td>005</td><td>Deploy em Produção</td><td>DevOps</td><td>10/10/2025</td><td><span class="status futuro">Agendado</span></td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div id="batalha" class="tab-content">
-        <h2>⚓ Batalha Naval - Log de Jogadas</h2>
-        
-        <div class="filter-container">
-            <label><strong>Filtrar Jogadas:</strong></label>
-            <input type="text" id="inputBatalha" onkeyup="filtrarTabela('tableBatalha', 'inputBatalha')" class="filter-input" placeholder="Busque por Jogador ou Resultado (ex: Acertou)...">
+        <div id="view-projeto-piloto" class="tab-content font-inter">
+            <div id="react-root"></div>
         </div>
 
-        <table id="tableBatalha">
-            <thead>
-                <tr>
-                    <th>Rodada</th>
-                    <th>Jogador</th>
-                    <th>Coordenada</th>
-                    <th>Resultado</th>
-                    <th>Pontos</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>1</td><td>Jogador 1</td><td>A5</td><td>Água</td><td>0</td></tr>
-                <tr><td>1</td><td>Jogador 2</td><td>B2</td><td>Água</td><td>0</td></tr>
-                <tr><td>2</td><td>Jogador 1</td><td>C4</td><td><span class="status concluido">Acertou!</span></td><td>100</td></tr>
-                <tr><td>2</td><td>Jogador 2</td><td>D4</td><td>Água</td><td>0</td></tr>
-                <tr><td>3</td><td>Jogador 1</td><td>C5</td><td><span class="status concluido">Afundou!</span></td><td>300</td></tr>
-                <tr><td>3</td><td>Jogador 2</td><td>A1</td><td><span class="status concluido">Acertou!</span></td><td>100</td></tr>
-            </tbody>
-        </table>
-    </div>
+        <div id="view-cronograma" class="tab-content font-inter">
+            <div id="react-root-cronograma"></div>
+        </div>
 
-</div>
+    </main>
 
-<script>
-    // Função para alternar abas
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-            tabcontent[i].classList.remove("active-content");
+    <div id="toast" class="fixed top-24 right-6 p-4 rounded-lg text-white shadow-lg transform translate-x-full opacity-0 z-50">Msg</div>
+    <div id="store-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"><header class="flex justify-between items-center p-5 border-b"><h2 id="store-modal-title" class="text-xl font-extrabold text-gray-800">Loja</h2><button id="close-modal-btn" class="text-gray-500 hover:text-red-500"><i class="fa-solid fa-times fa-lg"></i></button></header><form id="store-form" class="p-6 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="space-y-4"><div><label class="block text-sm font-medium">Nome Loja</label><input type="text" name="nome-loja" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">CNPJ (ID)</label><input type="text" id="cnpj" name="cnpj" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Analista</label><input type="text" id="analista" name="analista" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">GE</label><input type="text" id="ge" name="ge" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Associado</label><input type="text" id="associado" name="associado" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div></div><div class="space-y-4"><div><label class="block text-sm font-medium">Bandeira</label><input type="text" id="bandeira" name="bandeira" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">UF</label><input type="text" id="uf" name="uf" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Anjo</label><input type="text" id="anjo" name="anjo" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div id="form-project-group"><label class="block text-sm font-medium">Projeto</label><select id="nome-projeto" name="nome-projeto" required class="mt-1 block w-full rounded border-gray-300 shadow-sm"><option value="" disabled selected>Carregando...</option></select></div><div id="form-meta-group"><label class="block text-sm font-medium">Meta</label><input type="number" name="meta" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></div><div id="form-observation-group"><label class="block text-sm font-medium">Obs</label><textarea name="observation" rows="3" class="mt-1 block w-full rounded border-gray-300 shadow-sm"></textarea></div></div></div></form><footer class="flex justify-end p-5 border-t bg-gray-50"><button id="cancel-modal-btn" class="bg-gray-200 text-gray-700 py-2 px-5 rounded mr-3">Cancelar</button><button id="save-store-btn" type="submit" form="store-form" class="bg-[#FF5510] text-white py-2 px-5 rounded shadow">Salvar</button></footer></div></div>
+    <div id="chart-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl"><header class="flex justify-between items-center p-5 border-b"><h2 class="text-xl font-bold">Gráfico</h2><button id="close-chart-modal-btn"><i class="fa-solid fa-times"></i></button></header><div class="p-6"><div class="mb-4 flex justify-center space-x-6"><label><input type="radio" name="chart-format" value="number" checked class="mr-2">Número</label><label><input type="radio" name="chart-format" value="currency" class="mr-2">Moeda</label><label><input type="radio" name="chart-format" value="percent" class="mr-2">%</label></div><canvas id="indicator-chart"></canvas></div></div></div>
+    <div id="obs-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><header class="flex justify-between items-center p-5 border-b"><h2 class="font-bold">Obs</h2></header><div class="p-6"><textarea id="obs-modal-textarea" rows="8" class="w-full border rounded"></textarea></div><footer class="flex justify-end p-5 border-t"><button id="cancel-obs-btn" class="bg-gray-200 px-4 py-2 rounded mr-2">Cancelar</button><button id="save-obs-btn" class="bg-[#FF5510] text-white px-4 py-2 rounded">Salvar</button></footer></div></div>
+    <div id="delete-confirm-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Excluir?</h2><p class="mb-6">Tem certeza?</p><div class="flex justify-end"><button id="cancel-delete-btn" class="bg-gray-200 px-4 py-2 rounded mr-3">Não</button><button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div></div></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyALfPIUw9lc_zkHlSZ6Y2xRdcTu0awhdzM", authDomain: "dashboardprojetos-a749c.firebaseapp.com", databaseURL: "https://dashboardprojetos-a749c-default-rtdb.firebaseio.com", projectId: "dashboardprojetos-a749c", storageBucket: "dashboardprojetos-a749c.firebasestorage.app", messagingSenderId: "208429748638", appId: "1:208429748638:web:9d5ee72514035221b3c68f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        window.firebaseDB = db; window.firebaseRef = ref; window.firebaseSet = set; window.firebaseOnValue = onValue;
+
+        // Dashboard 1 Logic
+        const dbRefV1 = ref(db, 'dashboard_projetos_v1');
+        const projectList = ["MIX DE PRODUTOS", "PRECIFICAÇÃO", "PBM", "PEC", "SETORIZAÇÃO (ESTACIONAMENTO)", "MARCAS PROPRIAS", "GC (FARMACINHA)", "DELIVERY (E-DELIVERY)", "INSPIRE +", "DERMACLUB", "SERVIÇOS FARMACEUTICOS", "CAMPANHA IDOSO", "MEDICAMENTOS ESPECIAIS", "FIDELIZA MAIS"];
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabName}`).classList.add('active');
+            document.getElementById(`btn-${tabName}`).classList.add('active');
         }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
+
+        function initDropdowns() {
+            const pSelects = [document.getElementById('filter-projeto'), document.getElementById('chart-filter-project'), document.getElementById('nome-projeto')];
+            pSelects.forEach(sel => { if(!sel) return; sel.innerHTML = sel.id === 'nome-projeto' ? '<option value="" disabled selected>Selecione um projeto</option>' : '<option value="">Todos os Projetos</option>'; projectList.forEach(p => sel.add(new Option(p, p))); });
         }
-        document.getElementById(tabName).style.display = "block";
-        document.getElementById(tabName).classList.add("active-content");
-        evt.currentTarget.className += " active";
-    }
+        initDropdowns();
 
-    // Função Genérica de Filtro
-    function filtrarTabela(tabelaId, inputId) {
-        var input, filter, table, tr, td, i, txtValue;
-        input = document.getElementById(inputId);
-        filter = input.value.toUpperCase();
-        table = document.getElementById(tabelaId);
-        tr = table.getElementsByTagName("tr");
+        let allStoresData = [], allFlattenedData = [], currentChartInstance = null, consolidatedChartInstance = null, currentChartRowData = null;
+        const statusList = [{val:'pendente', txt:'Pendente', cls:'status-pendente'}, {val:'andamento', txt:'Em Andamento', cls:'status-andamento'}, {val:'pendente-associa', txt:'Pendente Assoc.', cls:'status-pendente-associa'}, {val:'finalizado', txt:'Finalizado', cls:'status-finalizado'}];
+        const indicatorMonths = [ { id: 'aug2025', label: 'Ago/25' }, { id: 'sep2025', label: 'Set/25' }, { id: 'oct2025', label: 'Out/25' }, { id: 'nov2025', label: 'Nov/25' }, { id: 'dec2025', label: 'Dez/25' }, { id: 'jan2026', label: 'Jan/26' }, { id: 'feb2026', label: 'Fev/26' }, { id: 'mar2026', label: 'Mar/26' }, { id: 'apr2026', label: 'Abr/26' }, { id: 'may2026', label: 'Mai/26' }, { id: 'jun2026', label: 'Jun/26' }, { id: 'jul2026', label: 'Jul/26' }, { id: 'aug2026', label: 'Ago/26' }, { id: 'sep2026', label: 'Set/26' }, { id: 'oct2026', label: 'Out/26' }, { id: 'nov2026', label: 'Nov/26' }, { id: 'dec2026', label: 'Dez/26' } ];
+        const chartLabels = indicatorMonths.map(m => m.label);
 
-        // Loop por todas as linhas da tabela (começando de 1 para pular o cabeçalho)
-        for (i = 1; i < tr.length; i++) {
-            // Verifica todas as células da linha
-            var linhaVisivel = false;
-            var cells = tr[i].getElementsByTagName("td");
-            
-            for (var j = 0; j < cells.length; j++) {
-                td = cells[j];
-                if (td) {
-                    txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        linhaVisivel = true;
-                        break; // Se achou em uma coluna, já serve
-                    }
+        const els = { tableBody: document.getElementById('project-table-body'), toast: document.getElementById('toast'), storeModal: document.getElementById('store-modal'), storeForm: document.getElementById('store-form'), chartModal: document.getElementById('chart-modal'), obsModal: document.getElementById('obs-modal'), deleteModal: document.getElementById('delete-confirm-modal'), searchInput: document.getElementById('search-input'), kpis: { total: document.getElementById('kpi-total-lojas'), pendente: document.getElementById('kpi-projetos-pendentes'), associa: document.getElementById('kpi-projetos-pendentes-associa'), finalizado: document.getElementById('kpi-projetos-finalizados'), andamento: document.getElementById('kpi-em-andamento') }, filters: { analista: document.getElementById('filter-analista'), ge: document.getElementById('filter-ge'), associado: document.getElementById('filter-associado'), uf: document.getElementById('filter-uf'), projeto: document.getElementById('filter-projeto'), loja: document.getElementById('filter-loja') } };
+
+        onValue(dbRefV1, (snapshot) => { const data = snapshot.val(); allStoresData = data ? (Array.isArray(data) ? data : Object.values(data)) : []; processData(); });
+        function saveToFirebase(newData) { set(dbRefV1, newData).catch(err => { console.error(err); showToast("Erro ao salvar!", true); }); }
+        
+        function processData() { allFlattenedData = []; const sets = { analistas: new Set(), ges: new Set(), associados: new Set(), ufs: new Set() }; allStoresData.forEach(store => { if(!store) return; if(store.analista) sets.analistas.add(store.analista); if(store.ge) sets.ges.add(store.ge); if(store.associado) sets.associados.add(store.associado); if(store.uf) sets.ufs.add(store.uf); if(store.projects) Object.keys(store.projects).forEach(pName => { allFlattenedData.push({ ...store, projectName: pName, ...store.projects[pName], projects: undefined }); }); }); allFlattenedData.sort((a,b) => a.nomeLoja.localeCompare(b.nomeLoja)); populateFilters(sets); applyFilters(); calcKPIs(); }
+        function populateFilters(sets) { const fill = (el, set) => { const cur = el.value; el.innerHTML = '<option value="">Todos</option>'; [...set].sort().forEach(v => v && el.add(new Option(v, v))); el.value = cur; }; fill(els.filters.analista, sets.analistas); fill(els.filters.ge, sets.ges); fill(els.filters.associado, sets.associados); fill(els.filters.uf, sets.ufs); const chartGe = document.getElementById('chart-filter-ge'); const curGe = chartGe.value; chartGe.innerHTML = '<option value="">Todos</option>'; [...sets.ges].sort().forEach(v => v && chartGe.add(new Option(v, v))); chartGe.value = curGe; }
+        function applyFilters() { const s = els.searchInput.value.toLowerCase() || els.filters.loja.value.toLowerCase(); const f = els.filters; const filtered = allFlattenedData.filter(r => { const matchesSearch = !s || r.nomeLoja.toLowerCase().includes(s) || r.id.toLowerCase().includes(s); return matchesSearch && (!f.analista.value || r.analista === f.analista.value) && (!f.ge.value || r.ge === f.ge.value) && (!f.associado.value || r.associado === f.associado.value) && (!f.uf.value || r.uf === f.uf.value) && (!f.projeto.value || r.projectName === f.projeto.value); }); renderTable(filtered); }
+        function renderTable(data) { els.tableBody.innerHTML = ''; if(!data.length) { els.tableBody.innerHTML = '<tr><td colspan="29" class="p-8 text-center text-gray-500">Nenhum dado encontrado.</td></tr>'; return; } data.forEach(r => { const tr = document.createElement('tr'); tr.className = 'bg-white border-b hover:bg-gray-50'; const statusOpts = statusList.map(s => `<option value="${s.val}" ${r.status===s.val?'selected':''}>${s.txt}</option>`).join(''); const statusClass = statusList.find(s=>s.val===r.status)?.cls || 'status-default'; const inputs = indicatorMonths.map(m => `<td class="px-2 py-2 text-center"><input type="number" class="indicator-input-table" value="${r.indicators?.[m.id]||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}" data-m="${m.id}"></td>`).join(''); tr.innerHTML = `<td class="px-4 py-3 font-medium whitespace-nowrap">${r.nomeLoja}</td><td class="px-4 py-3 text-xs text-gray-600">${r.id}</td><td class="px-4 py-3 text-xs text-gray-600">${r.analista||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.ge||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.associado||'-'}</td><td class="px-4 py-3 text-xs text-gray-600">${r.bandeira||'-'}</td><td class="px-4 py-3 font-bold text-gray-800 text-xs">${r.projectName}</td><td class="px-4 py-3 text-center"><select class="status-select ${statusClass} text-xs" data-id="${r.id}" data-p="${r.projectName}">${statusOpts}</select></td><td class="px-4 py-2 text-center"><input type="number" class="indicator-input-table meta-input" value="${r.goal||''}" placeholder="-" data-id="${r.id}" data-p="${r.projectName}"></td>${inputs}<td class="px-4 py-3 text-center"><button class="view-obs-btn ${r.observation&&r.observation.trim()?'obs-filled':'text-gray-400'}" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-note-sticky"></i></button></td><td class="px-4 py-3 text-center flex gap-2 justify-center"><button class="edit-btn text-blue-500" data-id="${r.id}"><i class="fa-solid fa-pencil"></i></button><button class="chart-btn text-[#FF5510]" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-chart-line"></i></button><button class="del-btn text-red-500" data-id="${r.id}" data-p="${r.projectName}"><i class="fa-solid fa-trash"></i></button></td>`; els.tableBody.appendChild(tr); }); els.tableBody.querySelectorAll('select').forEach(el => el.addEventListener('change', (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => p.status = e.target.value))); els.tableBody.querySelectorAll('.indicator-input-table:not(.meta-input)').forEach(el => el.addEventListener('change', (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => { if(!p.indicators) p.indicators={}; p.indicators[e.target.dataset.m] = e.target.value; }))); els.tableBody.querySelectorAll('.meta-input').forEach(el => el.addEventListener('change', (e) => updateGeneric(e.target.dataset.id, e.target.dataset.p, (p) => p.goal = e.target.value))); els.tableBody.querySelectorAll('.view-obs-btn').forEach(el => el.addEventListener('click', openObs)); els.tableBody.querySelectorAll('.chart-btn').forEach(el => el.addEventListener('click', openChart)); els.tableBody.querySelectorAll('.del-btn').forEach(el => el.addEventListener('click', confirmDel)); els.tableBody.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', editStore)); }
+        function updateGeneric(id, pName, fn) { const clone = JSON.parse(JSON.stringify(allStoresData)); const idx = clone.findIndex(s => s && s.id === id); if(idx > -1 && clone[idx].projects[pName]) { fn(clone[idx].projects[pName]); saveToFirebase(clone); } }
+        function calcKPIs() { const k = { total: new Set(), pend: 0, assoc: 0, fin: 0, and: 0 }; allFlattenedData.forEach(r => { k.total.add(r.id); if(r.status === 'pendente') k.pend++; else if(r.status === 'pendente-associa') k.assoc++; else if(r.status === 'finalizado') k.fin++; else if(r.status === 'andamento') k.and++; }); els.kpis.total.textContent = k.total.size; els.kpis.pendente.textContent = k.pend; els.kpis.associa.textContent = k.assoc; els.kpis.finalizado.textContent = k.fin; els.kpis.andamento.textContent = k.and; }
+        
+        function showToast(msg, err) { els.toast.textContent = msg; els.toast.className = `fixed top-24 right-6 p-4 rounded-lg text-white shadow-lg z-50 transform transition-all duration-300 ${err?'bg-red-600':'bg-green-600'} translate-x-0 opacity-100`; setTimeout(() => els.toast.classList.add('translate-x-full', 'opacity-0'), 3000); }
+        function hide(el) { el.classList.add('hidden'); } function show(el) { el.classList.remove('hidden'); }
+        els.storeForm.addEventListener('submit', (e) => { e.preventDefault(); const data = new FormData(els.storeForm); const id = data.get('cnpj'); const clone = JSON.parse(JSON.stringify(allStoresData)); let idx = clone.findIndex(s => s && s.id === id); const common = { analista: data.get('analista'), anjo: data.get('anjo'), uf: data.get('uf'), bandeira: data.get('bandeira'), ge: data.get('ge'), associado: data.get('associado'), nomeLoja: data.get('nome-loja') }; if(document.getElementById('cnpj').readOnly) { if(idx > -1) clone[idx] = { ...clone[idx], ...common }; } else { const pName = data.get('nome-projeto'); if(!id || !pName) { showToast("CNPJ e Projeto obrigatórios", true); return; } const newProj = { status: 'pendente', goal: data.get('meta'), observation: data.get('observation'), indicators: {} }; if(idx > -1) { clone[idx] = { ...clone[idx], ...common }; if(!clone[idx].projects) clone[idx].projects={}; clone[idx].projects[pName] = newProj; } else { clone.push({ ...common, id: id, projects: { [pName]: newProj } }); } } saveToFirebase(clone); hide(els.storeModal); });
+        function openObs(e) { const {id, p} = e.currentTarget.dataset; const row = allFlattenedData.find(r => r.id === id && r.projectName === p); document.getElementById('obs-modal-textarea').value = row?.observation || ''; document.getElementById('save-obs-btn').onclick = () => { updateGeneric(id, p, (pr) => pr.observation = document.getElementById('obs-modal-textarea').value); hide(els.obsModal); }; show(els.obsModal); }
+        function confirmDel(e) { const {id, p} = e.currentTarget.dataset; document.getElementById('confirm-delete-btn').onclick = () => { const clone = JSON.parse(JSON.stringify(allStoresData)); const idx = clone.findIndex(s => s && s.id === id); if(idx > -1) { delete clone[idx].projects[p]; saveToFirebase(clone); } hide(els.deleteModal); }; show(els.deleteModal); }
+        function editStore(e) { const d = allFlattenedData.find(r => r.id === e.currentTarget.dataset.id); if(!d) return; ['nome-loja','analista','ge','associado','bandeira','uf','anjo'].forEach(f => document.getElementsByName(f)[0].value = d[f==='nome-loja'?'nomeLoja':f]||''); document.getElementById('cnpj').value = d.id; document.getElementById('cnpj').readOnly = true; document.getElementById('store-modal-title').textContent = "Editar Loja"; document.getElementById('form-project-group').style.display = 'none'; document.getElementById('form-meta-group').style.display = 'none'; document.getElementById('form-observation-group').style.display = 'none'; document.getElementById('nome-projeto').required = false; show(els.storeModal); }
+        function openChart(e) { const {id, p} = e.currentTarget.dataset; currentChartRowData = allFlattenedData.find(r => r.id === id && r.projectName === p); renderChart('number'); show(els.chartModal); }
+        function renderChart(fmt) { if(!currentChartRowData) return; const ctx = document.getElementById('indicator-chart').getContext('2d'); if(currentChartInstance) currentChartInstance.destroy(); const data = indicatorMonths.map(m => Number(currentChartRowData.indicators?.[m.id]) || 0); currentChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Realizado', data, borderColor: '#FF5510', backgroundColor: 'rgba(255,85,16,0.1)', fill: true, tension: 0.1 }] }, options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { annotation: { annotations: { line1: { type: 'line', yMin: Number(currentChartRowData.goal)||0, yMax: Number(currentChartRowData.goal)||0, borderColor: 'red', borderWidth: 2, borderDash: [5,5], label: { enabled: true, content: 'Meta: '+(Number(currentChartRowData.goal)||0) } } } } } } }); }
+        document.getElementById('generate-chart-btn').addEventListener('click', () => { const proj = document.getElementById('chart-filter-project').value; const ge = document.getElementById('chart-filter-ge').value; const term = document.getElementById('chart-filter-cnpj-loja').value.toLowerCase(); if(!proj) return; const rows = allFlattenedData.filter(r => r.projectName === proj && (!ge || r.ge === ge) && (!term || r.nomeLoja.toLowerCase().includes(term) || r.id.includes(term))); const ctx = document.getElementById('consolidated-chart').getContext('2d'); if(consolidatedChartInstance) consolidatedChartInstance.destroy(); consolidatedChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartLabels, datasets: rows.map(r => ({ label: r.nomeLoja, data: indicatorMonths.map(m => Number(r.indicators?.[m.id])||0), borderColor: '#'+Math.floor(Math.random()*16777215).toString(16), tension: 0.1, fill: false })) }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } } }); });
+        
+        document.getElementById('open-modal-btn').onclick = () => { els.storeForm.reset(); document.getElementById('cnpj').readOnly = false; document.getElementById('store-modal-title').textContent = "Nova Loja"; document.getElementById('form-project-group').style.display = 'block'; document.getElementById('form-meta-group').style.display = 'block'; document.getElementById('form-observation-group').style.display = 'block'; document.getElementById('nome-projeto').required = true; show(els.storeModal); };
+        ['close-modal-btn','cancel-modal-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.storeModal));
+        document.getElementById('close-chart-modal-btn').onclick = () => hide(els.chartModal);
+        ['cancel-obs-btn'].forEach(id => document.getElementById(id).onclick = () => hide(els.obsModal));
+        document.getElementById('cancel-delete-btn').onclick = () => hide(els.deleteModal);
+        document.getElementById('apply-filters-btn').onclick = applyFilters;
+        els.searchInput.addEventListener('input', applyFilters);
+        document.querySelectorAll('input[name="chart-format"]').forEach(r => r.onchange = () => renderChart(r.value));
+    </script>
+
+    <script type="text/babel">
+        // Common Icons
+        const IconBase = ({ children, size = 24, className = "", ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>);
+        const Target = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>);
+        const MinusCircle = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></IconBase>);
+        const AlertTriangle = (p) => (<IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>);
+        const Hammer = (p) => (<IconBase {...p}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.25c-.85 0-1.66.33-2.25.93L10.25 2.19a3 3 0 0 0-.88 2.12V5.5L13 9"/></IconBase>);
+        const CheckCircle2 = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>);
+        const ArrowRight = (p) => (<IconBase {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>);
+        const BarChart3 = (p) => (<IconBase {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>);
+        const LayoutList = (p) => (<IconBase {...p}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></IconBase>);
+        const Grip = (p) => (<IconBase {...p}><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></IconBase>);
+        const Check = (p) => (<IconBase {...p}><path d="M20 6 9 17l-5-5"/></IconBase>);
+        const Trophy = (p) => (<IconBase {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>);
+        const Store = (p) => (<IconBase {...p}><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></IconBase>);
+        const Users = (p) => (<IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>);
+        const Plus = (p) => (<IconBase {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>);
+        const Pencil = (p) => (<IconBase {...p}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconBase>);
+        const Trash2 = (p) => (<IconBase {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
+        const XIcon = (p) => (<IconBase {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
+        const Save = (p) => (<IconBase {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>);
+        const Filter = (p) => (<IconBase {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>);
+        const Download = (p) => (<IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>);
+        const Upload = (p) => (<IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>);
+        const Calendar = (p) => (<IconBase {...p}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>);
+        const User = (p) => (<IconBase {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconBase>);
+        const Clock = (p) => (<IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>);
+        const Search = (p) => (<IconBase {...p}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></IconBase>);
+    </script>
+
+    <script type="text/babel">
+        // [CÓDIGO DO PROJETO PILOTO COM FILTRO ADICIONADO]
+        const EXCEL_COLUMNS = [ { key: 'cnpj', label: 'CNPJ' }, { key: 'ge', label: 'GE' }, { key: 'associado', label: 'ASSOCIADO' }, { key: 'loja', label: 'NOME LOJA' }, { key: 'mix', label: 'MIX DE PRODUTOS' }, { key: 'precificacao', label: 'PRECIFICAÇÃO' }, { key: 'pbm', label: 'PBM' }, { key: 'pec', label: 'PEC' }, { key: 'setorizacao', label: 'SETORIZAÇÃO' }, { key: 'marcasProprias', label: 'MARCAS PROPRIAS' }, { key: 'gc', label: 'GC (FARMACINHA)' }, { key: 'delivery', label: 'DELIVERY' }, { key: 'inspire', label: 'INSPIRE +' }, { key: 'dermaclub', label: 'DERMACLUB' }, { key: 'servicos', label: 'SERVIÇOS FARM.' }, { key: 'idoso', label: 'CAMPANHA IDOSO' }, { key: 'especiais', label: 'MEDICAMENTOS ESPECIAIS' }, { key: 'fideliza', label: 'FIDELIZA MAIS' } ];
+        const projectLabels = { mix: "Mix de Produtos", precificacao: "Precificação", pbm: "PBM", pec: "PEC", setorizacao: "Setorização", marcasProprias: "Marcas Próprias", gc: "Gerenc. Categoria", delivery: "Delivery", inspire: "Inspire +", dermaclub: "DermaClub", servicos: "Serviços Farm.", idoso: "Campanha Idoso", especiais: "Med. Especiais", fideliza: "Fideliza Mais" };
+        const STATUS_MAP = { 'low_priority': 'BAIXA PRIORIDADE', 'priority_todo': 'A FAZER', 'priority_doing': 'TRABALHANDO', 'priority_done': 'FINALIZADO' };
+        const STATUS_MAP_REVERSE = { 'BAIXA PRIORIDADE': 'low_priority', 'A FAZER': 'priority_todo', 'TRABALHANDO': 'priority_doing', 'FINALIZADO': 'priority_done', 'BAIXA': 'low_priority', 'PENDENTE': 'priority_todo', 'EM ANDAMENTO': 'priority_doing', 'CONCLUIDO': 'priority_done' };
+        const initialDataRaw = [ { id: 1, associado: "EXEMPLO INICIAL", loja: "LOJA MODELO", ge: "00", cnpj: "00.000.000/0001-00", projetos: { mix: false } } ];
+
+        const ProjectBadge = ({ status, label, onClick }) => {
+          let bgColor = "", icon = null;
+          if (status === 'low_priority') { bgColor = "bg-slate-50 text-slate-400 border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 hover:bg-slate-100 cursor-pointer"; icon = <MinusCircle size={12} />; }
+          else if (status === 'priority_todo') { bgColor = "bg-red-50 text-red-600 border-red-200 shadow-sm cursor-pointer hover:bg-red-100 font-medium"; icon = <AlertTriangle size={14} className="animate-pulse" />; }
+          else if (status === 'priority_doing') { bgColor = "bg-orange-50 text-[#FF5510] border-orange-200 shadow-sm cursor-pointer hover:bg-orange-100 font-medium"; icon = <Hammer size={14} />; }
+          else if (status === 'priority_done') { bgColor = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm cursor-pointer hover:bg-emerald-100 font-medium"; icon = <CheckCircle2 size={14} className="text-emerald-500" />; }
+          return ( <div onClick={onClick} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs transition-all duration-200 group relative select-none ${bgColor}`} title="Clique para alterar o status"><div className={`transition-transform duration-300 ${status === 'priority_done' ? 'scale-100' : ''}`}>{icon}</div><span className="truncate flex-1">{label}</span></div> );
+        };
+
+        const ProgressBar = ({ done, totalPriority }) => {
+          const percentage = totalPriority > 0 ? Math.round((done / totalPriority) * 100) : 0;
+          return ( <div className="w-full"><div className="flex justify-between text-xs mb-1"><span className="font-semibold text-slate-700">{done} de {totalPriority} Resolvidos</span><span className={`font-bold ${percentage === 100 ? 'text-emerald-600' : 'text-[#FF5510]'}`}>{percentage}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-1000 ease-out shadow-sm relative overflow-hidden ${percentage === 100 ? 'bg-emerald-500' : 'bg-[#FF5510]'}`} style={{ width: `${percentage}%` }}></div></div></div> );
+        };
+
+        const StoreFormModal = ({ isOpen, onClose, onSave, editingData }) => {
+            const [formData, setFormData] = React.useState({ associado: '', loja: '', ge: '', cnpj: '' });
+            React.useEffect(() => { if (isOpen && editingData) { setFormData({ associado: editingData.associado, loja: editingData.loja, ge: editingData.ge, cnpj: editingData.cnpj }); } else if (isOpen) { setFormData({ associado: '', loja: '', ge: '', cnpj: '' }); } }, [isOpen, editingData]);
+            if (!isOpen) return null;
+            const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+            return ( <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}><div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"><div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50"><h3 className="font-bold text-lg text-slate-800">{editingData ? 'Editar Loja' : 'Adicionar Loja'}</h3><button onClick={onClose}><XIcon size={20} /></button></div><form onSubmit={(e)=>{e.preventDefault(); onSave(formData);}} className="p-6 space-y-4"><div><label className="block text-sm font-medium mb-1">Associado</label><input type="text" name="associado" required className="w-full px-3 py-2 border rounded-lg" value={formData.associado} onChange={handleChange} /></div><div><label className="block text-sm font-medium mb-1">Loja</label><input type="text" name="loja" required className="w-full px-3 py-2 border rounded-lg" value={formData.loja} onChange={handleChange} /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-1">G.E</label><input type="text" name="ge" className="w-full px-3 py-2 border rounded-lg" value={formData.ge} onChange={handleChange} /></div><div><label className="block text-sm font-medium mb-1">CNPJ</label><input type="text" name="cnpj" className="w-full px-3 py-2 border rounded-lg" value={formData.cnpj} onChange={handleChange} /></div></div><div className="pt-4 flex gap-3"><button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg">Cancelar</button><button type="submit" className="flex-1 px-4 py-2 bg-[#FF5510] text-white rounded-lg">Salvar</button></div></form></div></div> );
+        };
+
+        function ContingencyPlan() {
+          const [viewMode, setViewMode] = React.useState('pipeline');
+          const [associados, setAssociados] = React.useState([]);
+          const [isModalOpen, setIsModalOpen] = React.useState(false);
+          const [editingId, setEditingId] = React.useState(null);
+          const [selectedProject, setSelectedProject] = React.useState('mix');
+          const [searchTerm, setSearchTerm] = React.useState(''); // NOVO FILTRO
+          const fileInputRef = React.useRef(null);
+          const dbRefPilot = window.firebaseRef(window.firebaseDB, 'projeto_piloto_v1');
+
+          React.useEffect(() => {
+            window.firebaseOnValue(dbRefPilot, (snapshot) => {
+                const data = snapshot.val();
+                if (data) { setAssociados(data); } else {
+                    const processedData = initialDataRaw.map(item => { const newProjetos = {}; Object.keys(item.projetos).forEach(key => { const val = item.projetos[key]; newProjetos[key] = (val === true || val === 'pending') ? 'priority_todo' : 'low_priority'; }); return { ...item, projetos: newProjetos }; });
+                    window.firebaseSet(dbRefPilot, processedData); setAssociados(processedData);
                 }
-            }
-            
-            if (linhaVisivel) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
-            }
-        }
-    }
-</script>
+            });
+          }, []);
 
+          const updateFirebase = (newData) => { window.firebaseSet(dbRefPilot, newData); };
+          const handleAddNew = () => { setEditingId(null); setIsModalOpen(true); };
+          const handleEdit = (id) => { setEditingId(id); setIsModalOpen(true); };
+          const handleDelete = (id) => { if (confirm('Excluir loja?')) { updateFirebase(associados.filter(item => item.id !== id)); } };
+          const handleSaveForm = (formData) => {
+              let newData; if (editingId) newData = associados.map(item => item.id === editingId ? { ...item, ...formData } : item); else { const newId = Math.max(...associados.map(a => a.id), 0) + 1; const emptyProjects = {}; Object.keys(projectLabels).forEach(key => emptyProjects[key] = 'low_priority'); newData = [{ id: newId, ...formData, projetos: emptyProjects }, ...associados]; }
+              updateFirebase(newData); setIsModalOpen(false);
+          };
+
+          const handleExportXLSX = () => { const exportData = associados.map(item => { const row = { CNPJ: item.cnpj||'', GE: item.ge||'', ASSOCIADO: item.associado||'', "NOME LOJA": item.loja||'' }; EXCEL_COLUMNS.slice(4).forEach(col => row[col.label] = STATUS_MAP[item.projetos[col.key]] || 'BAIXA PRIORIDADE'); return row; }); const wb = XLSX.utils.book_new(); const ws = XLSX.utils.json_to_sheet(exportData); const wscols = Object.keys(exportData[0]||{}).map(k => ({ wch: k.length + 5 })); ws['!cols'] = wscols; XLSX.utils.book_append_sheet(wb, ws, "Contingencia"); XLSX.writeFile(wb, "Piloto_CO.xlsx"); };
+          const handleImportClick = () => fileInputRef.current.click();
+          const handleFileChange = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (evt) => { const wb = XLSX.read(evt.target.result, { type: 'binary' }); const ws = wb.Sheets[wb.SheetNames[0]]; const data = XLSX.utils.sheet_to_json(ws); if (data.length > 0) { let currentId = Math.max(...associados.map(a => a.id), 0) + 1; const newEntries = data.map(row => { const projetos = {}; Object.keys(projectLabels).forEach(key => { const label = EXCEL_COLUMNS.find(c => c.key === key)?.label; const val = row[label] ? row[label].toString().toUpperCase().trim() : ''; projetos[key] = STATUS_MAP_REVERSE[val] || 'low_priority'; }); return { id: currentId++, associado: row['ASSOCIADO']||'', loja: row['NOME LOJA']||'', ge: row['GE']?row['GE'].toString():'', cnpj: row['CNPJ']?row['CNPJ'].toString():'', projetos }; }); updateFirebase([...associados, ...newEntries]); alert(`${newEntries.length} lojas importadas!`); } }; reader.readAsBinaryString(file); e.target.value = null; };
+          const togglePriorityStatus = (id, projectKey) => { const newData = associados.map(item => { if (item.id === id) { const curr = item.projetos[projectKey]; let next = 'low_priority'; if (curr === 'low_priority') next = 'priority_todo'; else if (curr === 'priority_todo') next = 'priority_doing'; else if (curr === 'priority_doing') next = 'priority_done'; else if (curr === 'priority_done') next = 'low_priority'; return { ...item, projetos: { ...item.projetos, [projectKey]: next } }; } return item; }); updateFirebase(newData); };
+          const calculateStats = (projetos) => { const vals = Object.values(projetos); return { totalPriority: vals.filter(v => v !== 'low_priority').length, doneCount: vals.filter(v => v === 'priority_done').length, todoCount: vals.filter(v => v === 'priority_todo').length, doingCount: vals.filter(v => v === 'priority_doing').length }; };
+          const allStats = associados.map(a => calculateStats(a.projetos)); const totalPriorityAll = allStats.reduce((acc, curr) => acc + curr.totalPriority, 0); const totalDoneAll = allStats.reduce((acc, curr) => acc + curr.doneCount, 0); const avgProgress = totalPriorityAll > 0 ? (totalDoneAll / totalPriorityAll) * 100 : 0;
+          
+          // Lógica de Filtro Aplicada
+          const filteredAssociados = associados.filter(item => {
+              if (!searchTerm) return true;
+              const term = searchTerm.toLowerCase();
+              return (
+                  item.loja?.toLowerCase().includes(term) ||
+                  item.associado?.toLowerCase().includes(term) ||
+                  item.ge?.toString().includes(term) ||
+                  item.cnpj?.includes(term)
+              );
+          });
+
+          const todoList = filteredAssociados.filter(a => a.projetos[selectedProject] === 'priority_todo'); const doingList = filteredAssociados.filter(a => a.projetos[selectedProject] === 'priority_doing'); const doneList = filteredAssociados.filter(a => a.projetos[selectedProject] === 'priority_done');
+
+          return (
+            <div className="pb-20 max-w-[1920px] mx-auto p-6">
+              <div className="relative overflow-hidden mb-8 shadow-lg rounded-xl"><div className="absolute inset-0 bg-gradient-to-r from-[#FF5510] to-[#FF8040]"></div><div className="relative p-8 flex justify-between items-center"><div className="text-white"><h1 className="text-3xl font-extrabold">Piloto Centro-Oeste</h1><p className="text-white/90">Plano de Contingência e Gestão Estratégica</p></div><div className="flex gap-2"><button onClick={handleExportXLSX} className="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg flex gap-2"><Download size={20} /></button><button onClick={handleImportClick} className="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg flex gap-2"><Upload size={20} /></button><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" /><button onClick={handleAddNew} className="bg-white text-[#FF5510] font-bold py-2 px-4 rounded-lg flex gap-2 hover:bg-orange-50"><Plus size={20} /> Adicionar</button></div></div></div>
+              
+              {/* ÁREA DE FILTRO NOVO */}
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex items-center gap-4">
+                 <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={18} className="text-gray-400" />
+                    </div>
+                    <input 
+                        type="text" 
+                        className="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:bg-white focus:ring-[#FF5510] focus:border-[#FF5510] py-2" 
+                        placeholder="Filtrar por Loja, Associado ou GE (Funciona na Batalha Naval)..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                 </div>
+                 <div className="text-sm text-gray-500 font-medium">
+                    Mostrando {filteredAssociados.length} de {associados.length} lojas
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"><div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600"><AlertTriangle size={24} /></div><div><div className="text-slate-500 text-sm">A Fazer</div><div className="text-2xl font-bold">{allStats.reduce((a,c)=>a+c.todoCount,0)}</div></div></div><div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-[#FF5510]"><Hammer size={24} /></div><div><div className="text-slate-500 text-sm">Em Trabalho</div><div className="text-2xl font-bold">{allStats.reduce((a,c)=>a+c.doingCount,0)}</div></div></div><div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><CheckCircle2 size={24} /></div><div><div className="text-slate-500 text-sm">Finalizados</div><div className="text-2xl font-bold">{totalDoneAll}</div></div></div><div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><Trophy size={24} /></div><div className="flex-1"><div className="text-slate-500 text-sm">Progresso</div><div className="text-lg font-bold">{avgProgress.toFixed(0)}%</div><div className="w-full bg-gray-100 h-1.5 rounded-full mt-1"><div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${avgProgress}%` }}></div></div></div></div></div>
+              <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit border border-slate-200 shadow-sm"><button onClick={() => setViewMode('pipeline')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'pipeline' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><LayoutList size={18} /> Esteira</button><button onClick={() => setViewMode('grid')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'grid' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><Grip size={18} /> Batalha Naval</button><button onClick={() => setViewMode('project_report')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${viewMode === 'project_report' ? 'bg-[#FF5510] text-white' : 'text-slate-600 hover:bg-slate-50'}`}><Filter size={18} /> Relatório</button></div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+                  {viewMode === 'pipeline' && ( <div className="p-6 grid gap-6">{filteredAssociados.map((item) => { const stats = calculateStats(item.projetos); return ( <div key={item.id} className="bg-white border border-slate-100 rounded-xl p-6 hover:border-orange-200 hover:shadow-lg transition-all group relative"><div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleEdit(item.id)} className="p-2 bg-blue-50 text-blue-600 rounded"><Pencil size={16} /></button><button onClick={() => handleDelete(item.id)} className="p-2 bg-red-50 text-red-600 rounded"><Trash2 size={16} /></button></div><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">{item.associado.charAt(0)}</div><div><h4 className="font-bold text-slate-800">{item.associado}</h4><div className="text-sm text-slate-500">{item.loja} <span className="text-xs text-slate-300">| GE: {item.ge}</span></div></div></div><div className="w-1/3"><ProgressBar done={stats.doneCount} totalPriority={stats.totalPriority} /></div></div><div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">{Object.entries(item.projetos).map(([key, status]) => (<ProjectBadge key={key} label={projectLabels[key]} status={status} onClick={() => togglePriorityStatus(item.id, key)} />))}</div></div> ); })}</div> )}
+                  {viewMode === 'grid' && ( <div className="overflow-x-auto"><table className="w-full text-sm text-left border-collapse"><thead className="bg-slate-50 text-slate-600 font-semibold"><tr><th className="px-4 py-5 border-b text-center">Ações</th><th className="px-6 py-5 border-b">Loja</th>{Object.values(projectLabels).map((label) => (<th key={label} className="px-1 py-4 border-b text-center align-bottom"><div className="h-32 flex items-end justify-center pb-2"><span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }} className="text-xs uppercase tracking-wider">{label}</span></div></th>))}<th className="px-4 py-5 text-center border-b">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredAssociados.map((item) => { const stats = calculateStats(item.projetos); return ( <tr key={item.id} className="hover:bg-orange-50/30"><td className="px-4 py-4 text-center"><div className="flex gap-2 justify-center"><button onClick={() => handleEdit(item.id)} className="text-blue-500"><Pencil size={16}/></button><button onClick={() => handleDelete(item.id)} className="text-red-400"><Trash2 size={16}/></button></div></td><td className="px-6 py-4"><div className="font-bold text-slate-700">{item.associado}</div><div className="text-xs text-slate-400">{item.loja}</div></td>{Object.entries(item.projetos).map(([key, status]) => ( <td key={key} onClick={() => togglePriorityStatus(item.id, key)} className="px-2 py-3 text-center border-r border-slate-50/50 cursor-pointer hover:bg-white"><div className="flex justify-center">{status === 'priority_done' ? <div className="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center"><Check size={16} /></div> : status === 'priority_doing' ? <div className="w-8 h-8 rounded bg-orange-100 text-[#FF5510] flex items-center justify-center"><Hammer size={16} /></div> : status === 'priority_todo' ? <div className="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center"><AlertTriangle size={16} /></div> : <div className="w-8 h-8 rounded bg-slate-50 text-slate-300 flex items-center justify-center"><MinusCircle size={12} /></div>}</div></td>))}<td className="px-4 py-4 text-center font-bold text-[#FF5510]">{stats.doneCount}/{stats.totalPriority}</td></tr> ); })}</tbody></table></div> )}
+                  {viewMode === 'project_report' && ( <div className="p-8"><div className="flex items-center justify-between mb-8"><h3 className="text-xl font-bold flex items-center gap-3"><div className="p-2 bg-orange-100 rounded text-[#FF5510]"><Filter size={20}/></div> Filtro por Projeto</h3><select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="p-3 bg-slate-50 border rounded-xl">{Object.entries(projectLabels).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}</select></div><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="bg-red-50/50 rounded-2xl border border-red-100 h-[600px] flex flex-col"><div className="bg-red-100/80 px-6 py-4 flex justify-between font-bold text-red-800"><div>A Fazer</div><span>{todoList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{todoList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="text-red-500"><ArrowRight size={16}/></button></div>))}</div></div><div className="bg-orange-50/50 rounded-2xl border border-orange-100 h-[600px] flex flex-col"><div className="bg-orange-100/80 px-6 py-4 flex justify-between font-bold text-orange-800"><div>Trabalhando</div><span>{doingList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{doingList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><button onClick={() => togglePriorityStatus(item.id, selectedProject)} className="text-orange-500"><Check size={16}/></button></div>))}</div></div><div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 h-[600px] flex flex-col"><div className="bg-emerald-100/80 px-6 py-4 flex justify-between font-bold text-emerald-800"><div>Finalizado</div><span>{doneList.length}</span></div><div className="p-4 overflow-y-auto space-y-3">{doneList.map(item => (<div key={item.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between"><div><div className="font-bold">{item.loja}</div><div className="text-xs text-slate-500">{item.associado}</div></div><div className="text-emerald-500"><Check size={16}/></div></div>))}</div></div></div></div> )}
+              </div>
+              <StoreFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveForm} editingData={editingId ? associados.find(a => a.id === editingId) : null} />
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('react-root'));
+        root.render(<ContingencyPlan />);
+    </script>
+
+    <script type="text/babel">
+        // [CÓDIGO DO CRONOGRAMA COM CALENDÁRIO 2025/2026]
+        const ScheduleApp = () => {
+            const [events, setEvents] = React.useState([]);
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const [filter, setFilter] = React.useState('all'); 
+            const [viewMode, setViewMode] = React.useState('list'); // 'list' ou 'calendar'
+            const [editingEvent, setEditingEvent] = React.useState(null);
+            
+            // Form State
+            const [formData, setFormData] = React.useState({ title: '', type: 'meeting', date: '', time: '', facilitator: '', audience: '', status: 'scheduled', notes: '' });
+
+            // Firebase Ref
+            const dbRefSchedule = window.firebaseRef(window.firebaseDB, 'cronograma_v1');
+
+            React.useEffect(() => {
+                window.firebaseOnValue(dbRefSchedule, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const eventList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                        eventList.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+                        setEvents(eventList);
+                    } else {
+                        setEvents([]);
+                    }
+                });
+            }, []);
+
+            const saveEvent = (e) => {
+                e.preventDefault();
+                const newRef = editingEvent ? window.firebaseRef(window.firebaseDB, `cronograma_v1/${editingEvent.id}`) : window.firebaseRef(window.firebaseDB, `cronograma_v1/${Date.now()}`);
+                window.firebaseSet(newRef, formData).then(() => {
+                    setIsModalOpen(false);
+                    setFormData({ title: '', type: 'meeting', date: '', time: '', facilitator: '', audience: '', status: 'scheduled', notes: '' });
+                    setEditingEvent(null);
+                });
+            };
+
+            const handleDelete = (id) => { if(confirm("Excluir evento?")) { window.firebaseSet(window.firebaseRef(window.firebaseDB, `cronograma_v1/${id}`), null); } };
+
+            const handleEdit = (ev) => {
+                setEditingEvent(ev);
+                setFormData({ title: ev.title, type: ev.type, date: ev.date, time: ev.time, facilitator: ev.facilitator, audience: ev.audience, status: ev.status, notes: ev.notes });
+                setIsModalOpen(true);
+            };
+
+            const toggleStatus = (ev) => {
+                const newStatus = ev.status === 'scheduled' ? 'completed' : 'scheduled';
+                window.firebaseSet(window.firebaseRef(window.firebaseDB, `cronograma_v1/${ev.id}`), { ...ev, status: newStatus });
+            };
+
+            const openNewModal = () => {
+                setEditingEvent(null);
+                setFormData({ title: '', type: 'meeting', date: '', time: '', facilitator: '', audience: '', status: 'scheduled', notes: '' });
+                setIsModalOpen(true);
+            };
+
+            const filteredEvents = events.filter(ev => filter === 'all' || ev.type === filter);
+            const stats = { total: events.length, meetings: events.filter(e => e.type === 'meeting').length, trainings: events.filter(e => e.type === 'training').length, completed: events.filter(e => e.status === 'completed').length };
+
+            // -- CALENDAR LOGIC START --
+            // Meses a renderizar: Out 2025 até Dez 2026
+            const calendarRange = [];
+            // Final de 2025 (Out, Nov, Dez - mês em JS é base 0, então 9=Out)
+            for (let m = 9; m < 12; m++) calendarRange.push({ year: 2025, month: m });
+            // Ano inteiro de 2026
+            for (let m = 0; m < 12; m++) calendarRange.push({ year: 2026, month: m });
+
+            const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+            const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay(); // 0 = Dom
+
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+            const renderCalendarMonth = (year, month) => {
+                const daysInMonth = getDaysInMonth(year, month);
+                const firstDay = getFirstDayOfMonth(year, month);
+                const blanks = Array(firstDay).fill(null);
+                const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+                
+                return (
+                    <div key={`${year}-${month}`} className="bg-white border rounded-lg overflow-hidden shadow-sm mb-6 break-inside-avoid">
+                        <div className="bg-slate-800 text-white p-2 text-center font-bold">
+                            {monthNames[month]} {year}
+                        </div>
+                        <div className="grid grid-cols-7 text-xs text-center border-b bg-gray-50 py-1">
+                            <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+                        </div>
+                        <div className="grid grid-cols-7 text-sm">
+                            {blanks.map((_, i) => <div key={`blank-${i}`} className="h-24 bg-gray-50 border-r border-b"></div>)}
+                            {days.map(d => {
+                                // Find events for this day
+                                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                                const dayEvents = filteredEvents.filter(e => e.date === dateStr);
+                                return (
+                                    <div key={d} className="h-24 border-r border-b p-1 relative hover:bg-slate-50 transition-colors">
+                                        <div className="font-semibold text-gray-400 mb-1">{d}</div>
+                                        <div className="space-y-1 overflow-y-auto max-h-[70px]">
+                                            {dayEvents.map(ev => (
+                                                <div onClick={() => handleEdit(ev)} key={ev.id} className={`cursor-pointer text-[10px] p-1 rounded truncate text-white ${ev.type === 'meeting' ? 'bg-indigo-500' : 'bg-purple-500'} ${ev.status === 'completed' ? 'opacity-50' : ''}`} title={ev.title}>
+                                                    {ev.time} {ev.title}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            };
+            // -- CALENDAR LOGIC END --
+
+            return (
+                <div className="p-6 max-w-[1920px] mx-auto min-h-screen">
+                    
+                    {/* Header do Cronograma */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                                    <i className="fa-regular fa-calendar-check text-[#FF5510]"></i> Cronograma de Execução
+                                </h2>
+                                <p className="text-slate-500">Gestão de Reuniões e Treinamentos com Associados</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="bg-gray-100 rounded-lg p-1 flex">
+                                    <button onClick={() => setViewMode('list')} className={`px-3 py-1.5 text-sm rounded-md font-medium transition-all ${viewMode === 'list' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'}`}>Lista</button>
+                                    <button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 text-sm rounded-md font-medium transition-all ${viewMode === 'calendar' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'}`}>Calendário</button>
+                                </div>
+                                <button onClick={openNewModal} className="bg-[#FF5510] text-white px-5 py-2.5 rounded-lg font-bold shadow-md hover:bg-[#E04A0E] transition-all flex items-center gap-2">
+                                    <i className="fa-solid fa-plus"></i> Novo Evento
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100"><span className="text-blue-600 font-bold text-xs uppercase">Total Eventos</span><div className="text-2xl font-bold text-blue-800">{stats.total}</div></div>
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100"><span className="text-purple-600 font-bold text-xs uppercase">Treinamentos</span><div className="text-2xl font-bold text-purple-800">{stats.trainings}</div></div>
+                            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100"><span className="text-indigo-600 font-bold text-xs uppercase">Reuniões</span><div className="text-2xl font-bold text-indigo-800">{stats.meetings}</div></div>
+                            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100"><span className="text-emerald-600 font-bold text-xs uppercase">Concluídos</span><div className="text-2xl font-bold text-emerald-800">{stats.completed}</div></div>
+                        </div>
+                    </div>
+
+                    {/* Filtros */}
+                    <div className="flex gap-2 mb-6">
+                        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>Todos</button>
+                        <button onClick={() => setFilter('meeting')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === 'meeting' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>Reuniões</button>
+                        <button onClick={() => setFilter('training')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === 'training' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>Treinamentos</button>
+                    </div>
+
+                    {/* VISTA LISTA */}
+                    {viewMode === 'list' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {filteredEvents.length === 0 ? (
+                                <div className="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
+                                    <p className="text-slate-400">Nenhum evento agendado.</p>
+                                </div>
+                            ) : (
+                                filteredEvents.map(ev => (
+                                    <div key={ev.id} className={`bg-white rounded-xl border-l-4 shadow-sm p-5 hover:shadow-md transition-all relative group ${ev.type === 'meeting' ? 'border-l-indigo-500' : 'border-l-purple-500'}`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${ev.type === 'meeting' ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600'}`}>{ev.type === 'meeting' ? 'Reunião' : 'Treinamento'}</span>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => handleEdit(ev)} className="text-slate-400 hover:text-blue-500"><i className="fa-solid fa-pencil"></i></button>
+                                                <button onClick={() => handleDelete(ev.id)} className="text-slate-400 hover:text-red-500"><i className="fa-solid fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                        <h3 className="font-bold text-lg text-slate-800 mb-1">{ev.title}</h3>
+                                        <p className="text-sm text-slate-500 mb-4">{ev.audience}</p>
+                                        <div className="space-y-2 text-sm text-slate-600 mb-4">
+                                            <div className="flex items-center gap-2"><i className="fa-regular fa-calendar w-4 text-center"></i> {new Date(ev.date).toLocaleDateString('pt-BR')} às {ev.time}</div>
+                                            <div className="flex items-center gap-2"><i className="fa-regular fa-user w-4 text-center"></i> {ev.facilitator}</div>
+                                        </div>
+                                        <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                                            <button onClick={() => toggleStatus(ev)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${ev.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'}`}>
+                                                <i className={`fa-solid ${ev.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}`}></i>
+                                                {ev.status === 'completed' ? 'Realizado' : 'Pendente'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {/* VISTA CALENDÁRIO (OUT/2025 - 2026) */}
+                    {viewMode === 'calendar' && (
+                        <div className="bg-white p-6 rounded-xl border border-slate-200">
+                             <div className="mb-4 text-sm text-gray-500">Exibindo calendário de Outubro/2025 até Dezembro/2026</div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {calendarRange.map(c => renderCalendarMonth(c.year, c.month))}
+                             </div>
+                        </div>
+                    )}
+
+                    {/* Modal */}
+                    {isModalOpen && (
+                        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                                <header className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 className="font-bold text-lg text-slate-800">{editingEvent ? 'Editar Evento' : 'Novo Agendamento'}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-red-500"><i className="fa-solid fa-times"></i></button></header>
+                                <form onSubmit={saveEvent} className="p-6 space-y-4">
+                                    <div><label className="block text-sm font-medium mb-1">Título / Tema</label><input type="text" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF5510]" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-sm font-medium mb-1">Tipo</label><select className="w-full px-3 py-2 border rounded-lg" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}><option value="meeting">Reunião</option><option value="training">Treinamento</option></select></div>
+                                        <div><label className="block text-sm font-medium mb-1">Facilitador</label><input type="text" required className="w-full px-3 py-2 border rounded-lg" value={formData.facilitator} onChange={e => setFormData({...formData, facilitator: e.target.value})} /></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-sm font-medium mb-1">Data</label><input type="date" required className="w-full px-3 py-2 border rounded-lg" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} /></div>
+                                        <div><label className="block text-sm font-medium mb-1">Hora</label><input type="time" required className="w-full px-3 py-2 border rounded-lg" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} /></div>
+                                    </div>
+                                    <div><label className="block text-sm font-medium mb-1">Público / Loja</label><input type="text" required className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: Associados Centro, Loja Modelo..." value={formData.audience} onChange={e => setFormData({...formData, audience: e.target.value})} /></div>
+                                    <div><label className="block text-sm font-medium mb-1">Notas</label><textarea rows="3" className="w-full px-3 py-2 border rounded-lg" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}></textarea></div>
+                                    <div className="pt-4 flex gap-3"><button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancelar</button><button type="submit" className="flex-1 px-4 py-2 bg-[#FF5510] text-white rounded-lg hover:bg-[#E04A0E]">Salvar</button></div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const rootSchedule = ReactDOM.createRoot(document.getElementById('react-root-cronograma'));
+        rootSchedule.render(<ScheduleApp />);
+    </script>
 </body>
 </html>
